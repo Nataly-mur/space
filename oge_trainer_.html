@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ОГЭ Тренажёр</title>
+<style>
+:root{--teal:#3A626D;--beige:#D7C8AB;--navy:#244167;--gold:#C08A2F;--burg:#8A282F;}
+body{margin:0;padding:20px;background:#f5f3ee;font-family:Arial,sans-serif}
+.app{max-width:1100px;margin:auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.header{background:var(--navy);color:#fff;padding:20px;text-align:center;font-size:32px;font-weight:bold}
+.row{padding:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{background:var(--gold);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
+.mode.active{background:var(--teal)}
+.power-exp{
+    font-size:0.55em;
+    vertical-align:super;
+}
+#task{padding:30px;font-size:34px;min-height:100px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--navy)}
+.fraction{display:inline-flex;flex-direction:column;align-items:center;min-width:55px}
+.num{font-size:32px;color:var(--burg);font-weight:bold}
+.den{font-size:32px;color:var(--teal);font-weight:bold}
+.bar{width:100%;border-top:3px solid var(--navy);margin:3px 0}
+#result{padding:0 30px 20px;font-size:24px;font-weight:bold}
+.stats{padding:15px;background:#faf8f4;display:flex;gap:25px;flex-wrap:wrap;font-weight:bold;color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">Подготовка к ОГЭ по математике</div>
+
+<div class="row">
+<button onclick="resetStats()">
+Сбросить статистику
+</button>
+</div>
+
+<div class="row">
+<button class="mode" onclick="setMode(6,this)">ОГЭ №6 Дроби</button>
+<button class="mode" onclick="setMode(7,this)">ОГЭ №7 Степени</button>
+<button class="mode" onclick="setMode(8,this)">ОГЭ №8 Выражения</button>
+<span id="modeTitle"></span>
+</div>
+
+<div id="task"></div>
+
+<div class="row">
+<input id="answer" placeholder="Ответ">
+<button onclick="checkAnswer()">Проверить</button>
+<button onclick="generateExample()">Новое задание</button>
+</div>
+
+<div id="result"></div>
+
+<div class="stats">
+
+<div>
+<h3>Дроби</h3>
+Всего: <span id="fTotal">0</span><br>
+Верно: <span id="fCorrect">0</span>
+</div>
+
+<div>
+<h3>Степени</h3>
+Всего: <span id="pTotal">0</span><br>
+Верно: <span id="pCorrect">0</span>
+</div>
+
+<div>
+<h3>Выражения</h3>
+Всего: <span id="eTotal">0</span><br>
+Верно: <span id="eCorrect">0</span>
+</div>
+
+<div>
+<h3>Общая</h3>
+Всего: <span id="allTotal">0</span><br>
+Верно: <span id="allCorrect">0</span><br>
+Процент: <span id="allPercent">0%</span>
+</div>
+
+<div>
+<h3>Время</h3>
+<span id="timer">00:00</span>
+</div>
+
+</div>
+</div>
+
+<script>
+let currentMode=6,correctAnswer="";
+let stats = {
+    
+
+fractions:{
+total:0,
+correct:0
+},
+
+powers:{
+total:0,
+correct:0
+},
+
+expressions:{
+total:0,
+correct:0
+}
+
+};
+function updateStats(){
+fTotal.textContent =
+stats.fractions.total;
+
+fCorrect.textContent =
+stats.fractions.correct;
+
+pTotal.textContent =
+stats.powers.total;
+
+pCorrect.textContent =
+stats.powers.correct;
+
+eTotal.textContent =
+stats.expressions.total;
+
+eCorrect.textContent =
+stats.expressions.correct;
+
+const total =
+stats.fractions.total +
+stats.powers.total +
+stats.expressions.total;
+
+const correct =
+stats.fractions.correct +
+stats.powers.correct +
+stats.expressions.correct;
+
+allTotal.textContent = total;
+allCorrect.textContent = correct;
+
+allPercent.textContent =
+total
+? Math.round(correct*100/total)+"%"
+: "0%";
+
+}
+
+function gcd(a,b){while(b){[a,b]=[b,a%b]} return Math.abs(a)}
+function simplify(n,d){let g=gcd(n,d); return {n:n/g,d:d/g};}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function frac(n,d){return `<span class="fraction"><span class="num">${n}</span><span class="bar"></span><span class="den">${d}</span></span>`;}
+
+function setMode(m,btn){
+ currentMode=m;
+ document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
+ if(btn) btn.classList.add('active');
+ document.getElementById('modeTitle').textContent="Текущий режим: ОГЭ №"+m;
+ generateExample();
+}
+
+function generateFractions(){
+ const ops=["+","-","×","÷"]; const op=ops[Math.floor(Math.random()*4)];
+ let a=rnd(1,9),b=rnd(2,9),c=rnd(1,9),d=rnd(2,9),num,den;
+ if(op==="+"){num=a*d+c*b;den=b*d;}
+ if(op==="−"||op=="-"){num=a*d-c*b;den=b*d;if(num<=0)return generateFractions();}
+ if(op==="×"){num=a*c;den=b*d;}
+ if(op==="÷"){num=a*d;den=b*c;}
+ let r=simplify(num,den); correctAnswer=r.n+"/"+r.d;
+ task.innerHTML=frac(a,b)+op+frac(c,d)+" = ?";
+}
+
+function generatePowers(){
+ let a=rnd(2,9), n=rnd(2,4);
+ correctAnswer=String(a**n);
+ task.innerHTML=`${a}<span class="power-exp">${n}</span> = ?`;
+}
+
+function generateExpressions(){
+ let a=rnd(1,20), b=rnd(1,20);
+ correctAnswer=String(2*a+3*b);
+ task.innerHTML=`2·${a} + 3·${b} = ?`;
+}
+
+function generateExample(){
+ answer.value=""; result.textContent="";
+ // +++ разблокируем кнопку для нового примера
+ var btn = document.querySelector('button[onclick="checkAnswer()"]');
+ if(btn) btn.disabled = false;
+ if(currentMode===6) generateFractions();
+ if(currentMode===7) generatePowers();
+ if(currentMode===8) generateExpressions();
+}
+
+function checkAnswer(){
+
+let ok =
+answer.value.trim() === correctAnswer;
+
+if(currentMode===6){
+
+stats.fractions.total++;
+
+if(ok)
+stats.fractions.correct++;
+
+}
+
+if(currentMode===7){
+
+stats.powers.total++;
+
+if(ok)
+stats.powers.correct++;
+
+}
+
+if(currentMode===8){
+
+stats.expressions.total++;
+
+if(ok)
+stats.expressions.correct++;
+
+}
+
+if(ok){
+
+result.style.color="green";
+result.textContent="✓ Верно";
+
+}else{
+
+result.style.color="#8A282F";
+result.textContent=
+"✗ Правильный ответ: "
++ correctAnswer;
+
+}
+
+updateStats();
+
+// +++ блокируем кнопку после проверки
+var btn = document.querySelector('button[onclick="checkAnswer()"]');
+if(btn) btn.disabled = true;
+
+}
+
+function resetStats(){
+
+stats = {
+
+fractions:{total:0,correct:0},
+powers:{total:0,correct:0},
+expressions:{total:0,correct:0}
+
+};
+
+updateStats();
+
+}
+
+let sec=0;
+setInterval(()=>{
+ sec++;
+ timer.textContent=String(Math.floor(sec/60)).padStart(2,'0')+":"+String(sec%60).padStart(2,'0');
+},1000);
+
+// +++ Enter работает как «Проверить», но только пока кнопка активна
+document.getElementById('answer').addEventListener('keydown', function(e){
+  if (e.key === 'Enter'){
+    var btn = document.querySelector('button[onclick="checkAnswer()"]');
+    if (btn && !btn.disabled) checkAnswer();
+  }
+});
+
+setMode(6);
+</script>
+</body></html>

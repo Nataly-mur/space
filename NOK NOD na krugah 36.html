@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дроби на кругах</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --line:#e5e7eb; --a:#16a34a; --b:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:16px}
+  h1{font-size:20px;margin:0 0 12px}
+  .wrap{max-width:1040px;margin:0 auto;display:grid;
+        grid-template-columns:1fr 340px;gap:16px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .stage{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:8px}
+  svg{display:block;width:100%;height:auto}
+  .panel{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:14px}
+  .group{margin-bottom:18px;padding-bottom:14px;
+         border-bottom:1px solid var(--line)}
+  .group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .group h2{font-size:15px;margin:0 0 10px;font-weight:600}
+  .group.a h2{color:var(--a)}
+  .group.b h2{color:var(--b)}
+  .row{margin-bottom:10px}
+  .row label{display:flex;justify-content:space-between;font-size:14px;
+             color:var(--muted);margin-bottom:4px}
+  .row b{color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%}
+  .group.a input{accent-color:var(--a)}
+  .group.b input{accent-color:var(--b)}
+  .vals{border-top:1px solid var(--line);padding-top:10px;font-size:15px;
+        font-variant-numeric:tabular-nums}
+  .vals div{display:flex;justify-content:space-between;padding:4px 0}
+  .vals .k{color:var(--muted)}
+  .hint{margin-top:10px;padding:8px 10px;border-radius:8px;
+        background:#f5f3ff;font-size:14px;color:var(--ink)}
+</style>
+</head>
+<body>
+<h1>Дроби на кругах</h1>
+
+<div class="wrap">
+  <div class="stage">
+    <svg id="board" viewBox="0 0 680 460" aria-label="Два круга с долями"></svg>
+  </div>
+
+  <div class="panel">
+    <div class="group a">
+      <h2>Круг 1</h2>
+      <div class="row">
+        <label>Числитель <b id="lma">1</b></label>
+        <input id="rma" type="range" min="0" max="12" step="1" value="1">
+      </div>
+      <div class="row">
+        <label>Знаменатель <b id="la">3</b></label>
+        <input id="ra" type="range" min="1" max="12" step="1" value="3">
+      </div>
+    </div>
+
+    <div class="group b">
+      <h2>Круг 2</h2>
+      <div class="row">
+        <label>Числитель <b id="lmb">1</b></label>
+        <input id="rmb" type="range" min="0" max="36" step="1" value="1">
+      </div>
+      <div class="row">
+        <label>Знаменатель <b id="lb">4</b></label>
+        <input id="rb" type="range" min="1" max="36" step="1" value="4">
+      </div>
+    </div>
+
+    <div class="vals">
+      <div><span class="k">Круг 1</span><b id="v1">—</b></div>
+      <div><span class="k">Круг 2</span><b id="v2">—</b></div>
+      <!-- +++ НОВОЕ: строки для НОД и НОК -->
+      <div><span class="k">НОД (a, b)</span><b id="vgcd">—</b></div>
+      <div><span class="k">НОК (a, b)</span><b id="vlcm">—</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var svg = document.getElementById('board');
+  var rma = document.getElementById('rma');
+  var ra  = document.getElementById('ra');
+  var rmb = document.getElementById('rmb');
+  var rb  = document.getElementById('rb');
+  var lma = document.getElementById('lma');
+  var la  = document.getElementById('la');
+  var lmb = document.getElementById('lmb');
+  var lb  = document.getElementById('lb');
+  var v1  = document.getElementById('v1');
+  var v2  = document.getElementById('v2');
+  // +++ НОВОЕ: ссылки на элементы НОД и НОК
+  var vgcd = document.getElementById('vgcd');
+  var vlcm = document.getElementById('vlcm');
+
+  var W = 680, H = 460;
+  var R  = 140;
+  var CX1 = W/2 - 165, CX2 = W/2 + 165, CY = 180;
+
+  function el(name, attrs){
+    var n = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clear(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  // +++ НОВОЕ: НОД двух чисел (алгоритм Евклида)
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+
+  // сектор круга №i из n (0 — сверху, по часовой)
+  function sectorPath(cx, cy, r, i, n){
+    var step = 2*Math.PI / n;
+    var a1 = -Math.PI/2 + i*step;
+    var a2 = a1 + step;
+    var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    var x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
+    var large = (a2 - a1) > Math.PI ? 1 : 0;
+    return 'M ' + cx + ' ' + cy +
+           ' L ' + x1 + ' ' + y1 +
+           ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 + ' Z';
+  }
+
+  // дробь с горизонтальной чертой, центрированная в (x, y)
+  function drawFraction(g, x, y, num, den, color, size){
+    size = size || 26;
+    var gap = size * 0.16;
+    var halfLine = size * 0.45;
+
+    var t1 = el('text', {
+      x:x, y:y - gap, 'text-anchor':'middle',
+      'font-size':size, 'font-weight':700, fill:color
+    });
+    t1.textContent = num;
+    g.appendChild(t1);
+
+    g.appendChild(el('line', {
+      x1:x - halfLine, y1:y, x2:x + halfLine, y2:y,
+      stroke: color, 'stroke-width':2.5, 'stroke-linecap':'round'
+    }));
+
+    var t2 = el('text', {
+      x:x, y:y + gap + size*0.8, 'text-anchor':'middle',
+      'font-size':size, 'font-weight':700, fill:color
+    });
+    t2.textContent = den;
+    g.appendChild(t2);
+  }
+
+  // один круг: разрез на den частей, закрашено num долей
+  function drawCircle(cx, cy, num, den, color, fillRGBA){
+    for (var i = 0; i < den; i++){
+      var filled = i < num;
+      svg.appendChild(el('path', {
+        d: sectorPath(cx, cy, R, i, den),
+        fill: filled ? fillRGBA : '#fff',
+        stroke: '#cbd5e1', 'stroke-width':1
+      }));
+    }
+    svg.appendChild(el('circle', {
+      cx:cx, cy:cy, r:R, fill:'none',
+      stroke:'var(--ink)', 'stroke-width':2
+    }));
+    drawFraction(svg, cx, cy + R + 48, num, den, color, 26);
+  }
+
+  function draw(){
+    var ma = +rma.value, da = +ra.value;
+    var mb = +rmb.value, db = +rb.value;
+
+    if (ma > da){ ma = da; rma.value = da; }
+    if (mb > db){ mb = db; rmb.value = db; }
+
+    rma.max = da;
+    rmb.max = db;
+
+    lma.textContent = ma;
+    la.textContent  = da;
+    lmb.textContent = mb;
+    lb.textContent  = db;
+
+    clear();
+
+    drawCircle(CX1, CY, ma, da, 'var(--a)', 'rgba(22,163,74,.35)');
+    drawCircle(CX2, CY, mb, db, 'var(--b)', 'rgba(37,99,235,.35)');
+
+    // панель
+    v1.textContent = ma + ' / ' + da;
+    v2.textContent = mb + ' / ' + db;
+
+    // +++ НОВОЕ: НОД и НОК знаменателей
+    var g = gcd(da, db);
+    var l = da / g * db;
+    vgcd.textContent = g;
+    vlcm.textContent = l;
+  }
+
+  [rma, ra, rmb, rb].forEach(function(s){
+    s.addEventListener('input', draw);
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

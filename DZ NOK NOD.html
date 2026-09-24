@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> НОК и НОД двух чисел</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --line:#e5e7eb; --a:#2563eb; --ok:#16a34a; --err:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:20px}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 20px;text-align:center}
+  h2.section{font-size:18px;margin:0 0 12px;color:var(--muted);
+             text-align:center;font-weight:600;
+             border-top:1px solid var(--line);padding-top:20px}
+  h2.section.first{border-top:none;padding-top:0}
+
+  .card{background:var(--card);border:1px solid var(--line);
+        border-radius:14px;padding:22px;margin-bottom:16px}
+
+  .progress{display:flex;justify-content:space-between;align-items:center;
+            font-size:14px;color:var(--muted);margin-bottom:10px}
+  .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;
+       margin-bottom:18px}
+  .bar > i{display:block;height:100%;background:var(--a);
+           width:0;transition:width .3s}
+
+  .task{font-size:26px;text-align:center;margin:8px 0 22px;font-weight:600}
+  .task .num{color:var(--a);font-variant-numeric:tabular-nums}
+  #gcd-gameCard .task .num{color:var(--ok);}
+
+  .answer{display:flex;gap:10px;align-items:stretch}
+  .answer input{flex:1;padding:14px 16px;font-size:22px;text-align:center;
+    border:2px solid var(--line);border-radius:10px;
+    font-variant-numeric:tabular-nums;outline:none}
+  .answer input:focus{border-color:var(--a)}
+  .answer input.ok{border-color:var(--ok);background:#ecfdf3}
+  .answer input.err{border-color:var(--err);background:#fef2f2}
+  .answer button{padding:14px 22px;font-size:18px;font-weight:600;
+    border:none;border-radius:10px;background:var(--ink);color:#fff;
+    cursor:pointer}
+  .answer button:hover{opacity:.88}
+  .answer button:disabled{opacity:.4;cursor:default}
+
+  .feedback{margin-top:14px;min-height:26px;font-size:16px;
+            text-align:center;font-weight:500}
+  .feedback.ok{color:var(--ok)}
+  .feedback.err{color:var(--err)}
+  .feedback .sol{font-weight:400;color:var(--muted);font-size:14px}
+
+  .next{margin-top:14px;text-align:center}
+  .next button{padding:10px 26px;font-size:16px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;cursor:pointer}
+  .next button:hover{background:#f3f4f6}
+
+  .final{text-align:center;padding:20px 0}
+  .final .score{font-size:44px;font-weight:700;color:var(--a)}
+  .final .sub{color:var(--muted);margin-top:6px}
+  .final button{margin-top:18px;padding:12px 28px;font-size:17px;
+    border:none;border-radius:10px;background:var(--a);color:#fff;
+    cursor:pointer;font-weight:600}
+  .final button:hover{opacity:.9}
+
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1> НОК и НОД двух чисел</h1>
+
+  <!-- ==================== БЛОК 1: НОК ==================== -->
+  <h2 class="section first">Наименьшее Общее Кратное</h2>
+
+  <div class="card" id="lcm-gameCard">
+    <div class="progress">
+      <span>Задание <b id="lcm-cur">1</b> из 40</span>
+      <span>Верно: <b id="lcm-score">0</b></span>
+    </div>
+    <div class="bar"><i id="lcm-barFill"></i></div>
+
+    <div class="task">
+      НОК(<span class="num" id="lcm-na">—</span>;
+          <span class="num" id="lcm-nb">—</span>) = ?
+    </div>
+
+    <div class="answer">
+      <input id="lcm-inp" type="text" inputmode="numeric"
+             autocomplete="off" placeholder="ответ">
+      <button id="lcm-btnCheck">Проверить</button>
+    </div>
+
+    <div class="feedback" id="lcm-fb"></div>
+
+    <div class="next hidden" id="lcm-nextWrap">
+      <button id="lcm-btnNext">Дальше →</button>
+    </div>
+  </div>
+
+  <div class="card final hidden" id="lcm-finalCard">
+    <div class="score"><span id="lcm-finalScore">0</span> / 40</div>
+    <div class="sub" id="lcm-finalMsg">—</div>
+    <button id="lcm-btnRestart">Начать заново</button>
+  </div>
+
+  <!-- ==================== БЛОК 2: НОД ==================== -->
+  <h2 class="section">Наибольший Общий Делитель</h2>
+
+  <div class="card" id="gcd-gameCard">
+    <div class="progress">
+      <span>Задание <b id="gcd-cur">1</b> из 40</span>
+      <span>Верно: <b id="gcd-score">0</b></span>
+    </div>
+    <div class="bar"><i id="gcd-barFill"></i></div>
+
+    <div class="task">
+      НОД(<span class="num" id="gcd-na">—</span>;
+          <span class="num" id="gcd-nb">—</span>) = ?
+    </div>
+
+    <div class="answer">
+      <input id="gcd-inp" type="text" inputmode="numeric"
+             autocomplete="off" placeholder="ответ">
+      <button id="gcd-btnCheck">Проверить</button>
+    </div>
+
+    <div class="feedback" id="gcd-fb"></div>
+
+    <div class="next hidden" id="gcd-nextWrap">
+      <button id="gcd-btnNext">Дальше →</button>
+    </div>
+  </div>
+
+  <div class="card final hidden" id="gcd-finalCard">
+    <div class="score"><span id="gcd-finalScore">0</span> / 40</div>
+    <div class="sub" id="gcd-finalMsg">—</div>
+    <button id="gcd-btnRestart">Начать заново</button>
+  </div>
+</div>
+
+<!-- ==================== СКРИПТ 1: НОК ==================== -->
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL = 40;
+  var MIN = 3, MAX = 36;
+
+  var na = document.getElementById('lcm-na');
+  var nb = document.getElementById('lcm-nb');
+  var cur = document.getElementById('lcm-cur');
+  var scoreEl = document.getElementById('lcm-score');
+  var barFill = document.getElementById('lcm-barFill');
+  var inp = document.getElementById('lcm-inp');
+  var btnCheck = document.getElementById('lcm-btnCheck');
+  var fb = document.getElementById('lcm-fb');
+  var nextWrap = document.getElementById('lcm-nextWrap');
+  var btnNext = document.getElementById('lcm-btnNext');
+  var gameCard = document.getElementById('lcm-gameCard');
+  var finalCard = document.getElementById('lcm-finalCard');
+  var finalScore = document.getElementById('lcm-finalScore');
+  var finalMsg = document.getElementById('lcm-finalMsg');
+  var btnRestart = document.getElementById('lcm-btnRestart');
+
+  var tasks = [];
+  var idx = 0;
+  var score = 0;
+  var answered = false;
+
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+  function lcm(a, b){ return a / gcd(a, b) * b; }
+  function rnd(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function generateTasks(){
+    var seen = new Set();
+    var list = [];
+    var guard = 0;
+    while (list.length < TOTAL && guard < 20000){
+      guard++;
+      var a = rnd(MIN, MAX);
+      var b = rnd(MIN, MAX);
+      if (a === b) continue;              // одинаковые пропускаем
+      var l = lcm(a, b);
+      if (l > 100) continue;              // ответ не больше 100
+      var key = Math.min(a,b) + '-' + Math.max(a,b);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push({ a:a, b:b, lcm:l });
+    }
+    return list;
+  }
+
+  function renderTask(){
+    var t = tasks[idx];
+    na.textContent = t.a;
+    nb.textContent = t.b;
+    cur.textContent = idx + 1;
+
+    inp.value = '';
+    inp.className = '';
+    inp.disabled = false;
+    inp.focus();
+
+    fb.textContent = '';
+    fb.className = 'feedback';
+
+    nextWrap.classList.add('hidden');
+    btnCheck.disabled = false;
+
+    answered = false;
+    barFill.style.width = (idx / TOTAL * 100) + '%';
+  }
+
+  function check(){
+    if (answered) return;
+    var t = tasks[idx];
+    var raw = inp.value.trim();
+    if (raw === ''){ inp.focus(); return; }
+    var user = parseInt(raw, 10);
+    if (isNaN(user)){ inp.focus(); return; }
+
+    answered = true;
+    inp.disabled = true;
+    btnCheck.disabled = true;
+
+    if (user === t.lcm){
+      score++;
+      scoreEl.textContent = score;
+      inp.className = 'ok';
+      fb.className = 'feedback ok';
+      fb.innerHTML = 'Верно! НОК = ' + t.lcm + '.';
+    } else {
+      inp.className = 'err';
+      fb.className = 'feedback err';
+      fb.innerHTML = 'Неверно. Правильный ответ: <b>' + t.lcm + '</b>.' +
+        '<div class="sol">НОК = ' + t.a + ' · ' + t.b + ' </div>';
+    }
+
+    nextWrap.classList.remove('hidden');
+    btnNext.textContent = (idx === TOTAL - 1)
+      ? 'Показать результат →' : 'Дальше →';
+  }
+
+  function next(){
+    idx++;
+    if (idx >= TOTAL){ showFinal(); return; }
+    renderTask();
+  }
+
+  function showFinal(){
+    gameCard.classList.add('hidden');
+    finalCard.classList.remove('hidden');
+    finalScore.textContent = score;
+
+    var pct = Math.round(score / TOTAL * 100);
+    var msg;
+    if (pct >= 90)      msg = 'Отлично! ' + pct + '% верных.';
+    else if (pct >= 70) msg = 'Хорошо, но есть что подтянуть. ' + pct + '% верных.';
+    else if (pct >= 50) msg = 'Половина пути. Потренируйся ещё. ' + pct + '% верных.';
+    else                msg = 'Стоит повторить тему НОК. ' + pct + '% верных.';
+    finalMsg.textContent = msg;
+  }
+
+  function start(){
+    tasks = generateTasks();
+    idx = 0;
+    score = 0;
+    scoreEl.textContent = '0';
+    finalCard.classList.add('hidden');
+    gameCard.classList.remove('hidden');
+    renderTask();
+  }
+
+  btnCheck.addEventListener('click', check);
+
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      if (answered){
+        if (!nextWrap.classList.contains('hidden')) next();
+      } else {
+        check();
+      }
+    }
+  });
+
+  btnNext.addEventListener('click', next);
+  btnRestart.addEventListener('click', start);
+
+  start();
+})();
+</script>
+
+<!-- ==================== СКРИПТ 2: НОД ==================== -->
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL = 40;
+  var MIN = 3, MAX = 40;
+
+  var na = document.getElementById('gcd-na');
+  var nb = document.getElementById('gcd-nb');
+  var cur = document.getElementById('gcd-cur');
+  var scoreEl = document.getElementById('gcd-score');
+  var barFill = document.getElementById('gcd-barFill');
+  var inp = document.getElementById('gcd-inp');
+  var btnCheck = document.getElementById('gcd-btnCheck');
+  var fb = document.getElementById('gcd-fb');
+  var nextWrap = document.getElementById('gcd-nextWrap');
+  var btnNext = document.getElementById('gcd-btnNext');
+  var gameCard = document.getElementById('gcd-gameCard');
+  var finalCard = document.getElementById('gcd-finalCard');
+  var finalScore = document.getElementById('gcd-finalScore');
+  var finalMsg = document.getElementById('gcd-finalMsg');
+  var btnRestart = document.getElementById('gcd-btnRestart');
+
+  var tasks = [];
+  var idx = 0;
+  var score = 0;
+  var answered = false;
+
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+  function rnd(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function generateTasks(){
+    var seen = new Set();
+    var list = [];
+    var guard = 0;
+    var count2 = 0;                       // сколько раз уже был НОД = 2
+    var count3 = 0;                       // сколько раз уже был НОД = 3
+    var LIMIT2 = 5;                       // максимум для НОД = 2
+    var LIMIT3 = 7;                       // максимум для НОД = 3
+    while (list.length < TOTAL && guard < 40000){
+      guard++;
+      var a = rnd(MIN, MAX);
+      var b = rnd(MIN, MAX);
+      if (a === b) continue;
+      var g = gcd(a, b);
+      if (g === 1) continue;                       // НОД не должен быть 1
+      if (g === 2 && count2 >= LIMIT2) continue;   // лимит для НОД = 2
+      if (g === 3 && count3 >= LIMIT3) continue;   // лимит для НОД = 3
+      var key = Math.min(a,b) + '-' + Math.max(a,b);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (g === 2) count2++;
+      if (g === 3) count3++;
+      list.push({ a:a, b:b, g:g });
+    }
+    return list;
+  }
+
+  // перемешивает список так, чтобы не было трёх одинаковых g подряд
+  function shuffleNoTriples(list){
+    var byG = {};
+    list.forEach(function(t){
+      (byG[t.g] = byG[t.g] || []).push(t);
+    });
+    var groups = Object.keys(byG).map(function(k){ return byG[k]; });
+
+    var result = [];
+    while (groups.length){
+      // сортируем группы по убыванию размера
+      groups.sort(function(x, y){ return y.length - x.length; });
+
+      var g = groups[0];
+      var last = result[result.length - 1];
+      var prev = result[result.length - 2];
+
+      // если снова этот же g даст три подряд — берём следующую группу
+      if (g.length && last && prev &&
+          last.g === g[0].g && prev.g === g[0].g){
+        if (groups.length < 2) break;
+        var tmp = groups[0];
+        groups[0] = groups[1];
+        groups[1] = tmp;
+        g = groups[0];
+      }
+
+      result.push(g.shift());
+      if (g.length === 0) groups.shift();
+    }
+    return result;
+  }
+
+  function renderTask(){
+    var t = tasks[idx];
+    na.textContent = t.a;
+    nb.textContent = t.b;
+    cur.textContent = idx + 1;
+
+    inp.value = '';
+    inp.className = '';
+    inp.disabled = false;
+    inp.focus();
+
+    fb.textContent = '';
+    fb.className = 'feedback';
+
+    nextWrap.classList.add('hidden');
+    btnCheck.disabled = false;
+
+    answered = false;
+    barFill.style.width = (idx / TOTAL * 100) + '%';
+  }
+
+  function check(){
+    if (answered) return;
+    var t = tasks[idx];
+    var raw = inp.value.trim();
+    if (raw === ''){ inp.focus(); return; }
+    var user = parseInt(raw, 10);
+    if (isNaN(user)){ inp.focus(); return; }
+
+    answered = true;
+    inp.disabled = true;
+    btnCheck.disabled = true;
+
+    if (user === t.g){
+      score++;
+      scoreEl.textContent = score;
+      inp.className = 'ok';
+      fb.className = 'feedback ok';
+      fb.innerHTML = 'Верно! НОД = ' + t.g + '.';
+    } else {
+      inp.className = 'err';
+      fb.className = 'feedback err';
+      fb.innerHTML = 'Неверно. Правильный ответ: <b>' + t.g + '</b>.' +
+        '<div class="sol">' +
+        t.a + ' = ' + factorString(t.a) + '<br>' +
+        t.b + ' = ' + factorString(t.b) + '<br>' +
+        'НОД = ' + factorString(t.g) + ' = ' + t.g +
+        '</div>';
+    }
+
+    nextWrap.classList.remove('hidden');
+    btnNext.textContent = (idx === TOTAL - 1)
+      ? 'Показать результат →' : 'Дальше →';
+  }
+
+  function factorString(n){
+    var parts = [];
+    var x = n;
+    var d = 2;
+    while (d * d <= x){
+      while (x % d === 0){ parts.push(d); x /= d; }
+      d++;
+    }
+    if (x > 1) parts.push(x);
+    if (parts.length === 0) return String(n);
+    return parts.join(' · ');
+  }
+
+  function next(){
+    idx++;
+    if (idx >= TOTAL){ showFinal(); return; }
+    renderTask();
+  }
+
+  function showFinal(){
+    gameCard.classList.add('hidden');
+    finalCard.classList.remove('hidden');
+    finalScore.textContent = score;
+
+    var pct = Math.round(score / TOTAL * 100);
+    var msg;
+    if (pct >= 90)      msg = 'Отлично! ' + pct + '% верных.';
+    else if (pct >= 70) msg = 'Хорошо, но есть что подтянуть. ' + pct + '% верных.';
+    else if (pct >= 50) msg = 'Половина пути. Потренируйся ещё. ' + pct + '% верных.';
+    else                msg = 'Стоит повторить тему НОД. ' + pct + '% верных.';
+    finalMsg.textContent = msg;
+  }
+
+  function start(){
+    tasks = shuffleNoTriples(generateTasks());
+    idx = 0;
+    score = 0;
+    scoreEl.textContent = '0';
+    finalCard.classList.add('hidden');
+    gameCard.classList.remove('hidden');
+    renderTask();
+  }
+
+  btnCheck.addEventListener('click', check);
+
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      if (answered){
+        if (!nextWrap.classList.contains('hidden')) next();
+      } else {
+        check();
+      }
+    }
+  });
+
+  btnNext.addEventListener('click', next);
+  btnRestart.addEventListener('click', start);
+
+  start();
+})();
+</script>
+</body>
+</html>
