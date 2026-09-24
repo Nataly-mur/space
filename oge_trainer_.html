@@ -151,6 +151,19 @@ total
 
 function gcd(a,b){while(b){[a,b]=[b,a%b]} return Math.abs(a)}
 function simplify(n,d){let g=gcd(n,d); return {n:n/g,d:d/g};}
+// +++ нормализация ответа: "n/1" и "n" считаем одинаковыми
+function normalize(s){
+  s = String(s).trim().replace(/\s+/g,'');   // убираем пробелы
+  if (s === '') return s;
+  var m = s.match(/^(-?\d+)\/(\d+)$/);
+  if (m){
+    var num = parseInt(m[1], 10);
+    var den = parseInt(m[2], 10);
+    if (den === 1) return String(num);       // 3/1 → 3
+    return num + '/' + den;                  // остальные оставляем
+  }
+  return s;                                  // "3" остаётся "3"
+}
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function frac(n,d){return `<span class="fraction"><span class="num">${n}</span><span class="bar"></span><span class="den">${d}</span></span>`;}
 
@@ -198,7 +211,7 @@ function generateExample(){
 function checkAnswer(){
 
 let ok =
-answer.value.trim() === correctAnswer;
+normalize(answer.value) === normalize(correctAnswer);
 
 if(currentMode===6){
 
