@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>y = k/x — гипербола</title>
 <style>
   body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
@@ -9,6 +10,9 @@
   h2 { color: #1a237e; margin: 0 0 5px 0; font-size: 16px; }
   p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
   .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  .ctrl { display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px; }
+  .ctrl label { white-space: nowrap; }
+  .ctrl .value { min-width: 55px; text-align: left; }
   label { font-weight: 600; font-size: 14px; }
   input[type="range"] { flex: 1; min-width: 150px; accent-color: #d32f2f; }
   .value { font-weight: bold; color: #d32f2f; min-width: 55px; display: inline-block; font-size: 15px; }
@@ -19,6 +23,24 @@
   .formula strong { color: #d32f2f; }
   .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+  /* ---- Мобильная адаптация ---- */
+  .stage { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 18px; }
+    p.desc { font-size: 16px; }
+    .controls { gap: 8px; padding: 10px; }
+    .ctrl { flex: 1 1 100%; min-width: 0; }
+    .ctrl .value { min-width: 60px; }
+    label { font-size: 16px; }
+    .value { font-size: 17px; }
+    button { font-size: 15px; padding: 10px 16px; }
+    .formula { font-size: 20px; }
+    .info { font-size: 16px; }
+    .hint { font-size: 15px; }
+  }
 </style>
 <style>
         .back-btn {
@@ -52,16 +74,18 @@
       <text x="17" y="40" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="#1a237e">x</text>
     </svg>
     (гипербола)
-  </h2>>
+  </h2>
   <p class="desc">Знак <span style="font-weight:900;font-size:1.35em;color:#d32f2f">k</span> <b>определяет, в каких четвертях находятся ветви графика</b></p>
 
   <div class="controls">
-    <label>k =</label>
-    <input type="range" id="k" min="-5" max="5" step="0.1" value="2">
-    <span class="value" id="kv">2.0</span>
+    <div class="ctrl">
+      <label>k =</label>
+      <input type="range" id="k" min="-5" max="5" step="0.1" value="2">
+      <span class="value" id="kv">2.0</span>
+    </div>
     <button id="reset">Сброс</button>
   </div>
-
+  <div class="stage">
   <svg id="board" viewBox="0 0 600 500" width="600">
     <rect width="600" height="500" fill="#fafafa" rx="8"/>
 
@@ -108,6 +132,7 @@
     <path id="branch1" fill="none" stroke="#d32f2f" stroke-width="4"/>
     <path id="branch2" fill="none" stroke="#d32f2f" stroke-width="4"/>
   </svg>
+  </div>
 
   <div class="formula">y =
     <svg width="46" height="56" viewBox="0 0 46 56" style="vertical-align:middle;margin:0 4px">
