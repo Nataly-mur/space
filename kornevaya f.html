@@ -20,8 +20,30 @@
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
   .hint b { color: #d32f2f; }
 </style>
+<style>
+        .back-btn {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 44px;
+            height: 44px;
+            background: #0066cc;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 999;
+        }
+        .back-btn:hover {
+            background: #0052a3;
+        }
+    </style>
 </head>
 <body>
+    <a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
   <h2 style="white-space:nowrap">График y =
     <svg width="42" height="28" viewBox="0 0 60 40" style="vertical-align:middle;margin:0 2px;display:inline-block">
