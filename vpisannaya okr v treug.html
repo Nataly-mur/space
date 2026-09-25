@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вписанная окружность</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --accent:#2563eb; --accent2:#dc2626; --line:#e5e7eb;
+    --c-a:#2563eb; --c-b:#16a34a; --c-c:#d97706;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:16px}
+  h1{font-size:20px;margin:0 0 12px}
+  .wrap{max-width:1000px;margin:0 auto;display:grid;
+        grid-template-columns:1fr 300px;gap:16px}
+  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  .stage{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:8px}
+  svg{display:block;width:100%;height:auto}
+  .panel{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:14px}
+  .row{margin-bottom:12px}
+  .row label{display:flex;justify-content:space-between;font-size:14px;
+             color:var(--muted);margin-bottom:4px}
+  .row b{color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .s-a input{accent-color:var(--c-a)}
+  .s-b input{accent-color:var(--c-b)}
+  .s-c input{accent-color:var(--c-c)}
+  .vals{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;
+        font-variant-numeric:tabular-nums;font-size:15px}
+  .vals div{display:flex;justify-content:space-between;padding:3px 0}
+  .vals .k{color:var(--muted)}
+  .check{margin-top:10px;padding:8px 10px;border-radius:8px;
+         background:#eef6ff;font-size:14px}
+  .check.ok{background:#ecfdf3}
+</style>
+</head>
+<body>
+<h1>Окружность, вписанная в треугольник</h1>
+
+<div class="wrap">
+  <div class="stage">
+    <svg id="board" viewBox="0 0 640 520" aria-label="Чертёж"></svg>
+  </div>
+
+  <div class="panel">
+    <div class="row s-a">
+      <label>Сторона a <b id="la">6.0</b></label>
+      <input id="ra" type="range" min="3" max="12" step="0.1" value="6">
+    </div>
+    <div class="row s-b">
+      <label>Сторона b <b id="lb">7.0</b></label>
+      <input id="rb" type="range" min="3" max="12" step="0.1" value="7">
+    </div>
+    <div class="row s-c">
+      <label>Сторона c <b id="lc">8.0</b></label>
+      <input id="rc" type="range" min="3" max="12" step="0.1" value="8">
+    </div>
+
+    <div class="vals">
+      <div><span class="k">Площадь S</span><b id="vS">—</b></div>
+      <div><span class="k">Полупериметр p</span><b id="vp">—</b></div>
+      <div><span class="k">Радиус r = S / p</span><b id="vr">—</b></div>
+      <div><span class="k">Центр (I)</span><b id="vI">—</b></div>
+    </div>
+
+    <div class="check" id="check">Двигайте ползунки — треугольник перестраивается.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var svg   = document.getElementById('board');
+  var ra    = document.getElementById('ra');
+  var rb    = document.getElementById('rb');
+  var rc    = document.getElementById('rc');
+  var la    = document.getElementById('la');
+  var lb    = document.getElementById('lb');
+  var lc    = document.getElementById('lc');
+  var vS    = document.getElementById('vS');
+  var vp    = document.getElementById('vp');
+  var vr    = document.getElementById('vr');
+  var vI    = document.getElementById('vI');
+  var check = document.getElementById('check');
+
+  var W = 640, H = 520, PAD = 50;
+
+  // --- утилиты -----------------------------------------------------
+  function el(name, attrs){
+    var n = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clear(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function fmt(x, d){ d = (d==null?2:d); return (+x).toFixed(d); }
+
+  // --- геометрия ---------------------------------------------------
+  // по трём сторонам: возвращает координаты вершин в "математических"
+  // единицах (не пикселях), вершина A в начале координат, B на оси x.
+  function triangleFromSides(a, b, c){
+    // a = BC, b = AC, c = AB
+    // A(0,0), B(c,0), C — пересечение окружностей
+    var x = (b*b + c*c - a*a) / (2*c);
+    var y2 = b*b - x*x;
+    if (y2 < 0) return null;          // треугольник невозможен
+    var y = Math.sqrt(y2);
+    return { A:{x:0,y:0}, B:{x:c,y:0}, C:{x:x,y:y} };
+  }
+
+  // вписанная окружность: центр I — средневзвешенное вершин по сторонам
+  function incircle(t, a, b, c){
+    var per = a + b + c;
+    var I = {
+      x: (a*t.A.x + b*t.B.x + c*t.C.x) / per,
+      y: (a*t.A.y + b*t.B.y + c*t.C.y) / per
+    };
+    // радиус = расстояние от I до прямой AB (y=0), т.е. просто I.y
+    var r = I.y;
+    // площадь по Герону и проверка r = S/p
+    var p = per/2;
+    var S = Math.sqrt(p*(p-a)*(p-b)*(p-c));
+    var r2 = S / p;
+    return { I:I, r:r, S:S, p:p, r2:r2 };
+  }
+
+  // --- масштаб: вписать треугольник в область ----------------------
+  function makeTransform(t, r){
+    var xs = [t.A.x, t.B.x, t.C.x];
+    var ys = [t.A.y, t.B.y, t.C.y];
+    var minX = Math.min.apply(null, xs) - r;
+    var maxX = Math.max.apply(null, xs) + r;
+    var minY = Math.min.apply(null, ys) - r;
+    var maxY = Math.max.apply(null, ys) + r;
+    var w = maxX - minX, h = maxY - minY;
+    var k = Math.min((W - 2*PAD)/w, (H - 2*PAD)/h);
+    var ox = (W - k*w)/2 - k*minX;
+    var oy = (H - k*h)/2 + k*maxY;   // y переворачиваем (SVG вниз)
+    return function(pt){
+      return { x: ox + k*pt.x, y: oy - k*pt.y };
+    };
+  }
+
+  // --- отрисовка ---------------------------------------------------
+  function draw(){
+    var a = +ra.value, b = +rb.value, c = +rc.value;
+    la.textContent = fmt(a,1);
+    lb.textContent = fmt(b,1);
+    lc.textContent = fmt(c,1);
+
+    clear();
+
+    var t = triangleFromSides(a, b, c);
+    if (!t){
+      // неравенство треугольника нарушено
+      svg.appendChild(el('text', {x:W/2, y:H/2, 'text-anchor':'middle',
+        'font-size':20, fill:'#dc2626'}))
+        .textContent = 'Такого треугольника не существует';
+      vS.textContent = vp.textContent = vr.textContent = vI.textContent = '—';
+      check.className = 'check';
+      check.textContent = 'Нарушено неравенство треугольника: сумма двух сторон меньше третьей.';
+      return;
+    }
+
+    var inc = incircle(t, a, b, c);
+    var map = makeTransform(t, inc.r);
+
+    // треугольник
+    var A = map(t.A), B = map(t.B), C = map(t.C);
+    svg.appendChild(el('polygon', {
+      points: [A,B,C].map(function(p){return p.x+','+p.y;}).join(' '),
+      fill:'#eef6ff', stroke:'#1e2430', 'stroke-width':2
+    }));
+
+    // стороны: подписи и цвета
+    var sides = [
+      {p1:B, p2:C, col:'var(--c-a)', name:'a', val:a},
+      {p1:A, p2:C, col:'var(--c-b)', name:'b', val:b},
+      {p1:A, p2:B, col:'var(--c-c)', name:'c', val:c}
+    ];
+    sides.forEach(function(s){
+      svg.appendChild(el('line', {
+        x1:s.p1.x, y1:s.p1.y, x2:s.p2.x, y2:s.p2.y,
+        stroke:s.col, 'stroke-width':4, 'stroke-linecap':'round'
+      }));
+      var mx = (s.p1.x+s.p2.x)/2, my = (s.p1.y+s.p2.y)/2;
+      // сдвиг подписи наружу от центра
+      var cx = (A.x+B.x+C.x)/3, cy = (A.y+B.y+C.y)/3;
+      var dx = mx-cx, dy = my-cy, len = Math.hypot(dx,dy)||1;
+      var tx = mx + dx/len*22, ty = my + dy/len*22;
+      svg.appendChild(el('text', {x:tx, y:ty, 'text-anchor':'middle',
+        'dominant-baseline':'middle', 'font-size':16, 'font-weight':600,
+        fill:s.col})).textContent = s.name + ' = ' + fmt(s.val,1);
+    });
+
+    // вершины
+    [['A',A],['B',B],['C',C]].forEach(function(v){
+      svg.appendChild(el('circle', {cx:v[1].x, cy:v[1].y, r:5, fill:'#1e2430'}));
+      svg.appendChild(el('text', {x:v[1].x+10, y:v[1].y-10,
+        'font-size':16, 'font-weight':600})).textContent = v[0];
+    });
+
+    // центр I и вписанная окружность
+    var I = map(inc.I);
+    var rpx = inc.r * ((B.x - A.x) / c);   // масштаб k = |AB|px / c
+    svg.appendChild(el('circle', {cx:I.x, cy:I.y, r:rpx,
+      fill:'rgba(220,38,38,.08)', stroke:'#dc2626', 'stroke-width':2}));
+    svg.appendChild(el('circle', {cx:I.x, cy:I.y, r:4, fill:'#dc2626'}));
+    svg.appendChild(el('text', {x:I.x+8, y:I.y+18, 'font-size':14,
+      fill:'#dc2626', 'font-weight':600})).textContent = 'I';
+
+    // радиус к стороне c (горизонтальной) — вертикальная линия
+    var foot = { x:I.x, y:A.y };
+    svg.appendChild(el('line', {x1:I.x, y1:I.y, x2:foot.x, y2:foot.y,
+      stroke:'#dc2626', 'stroke-width':2, 'stroke-dasharray':'4 4'}));
+    svg.appendChild(el('text', {x:I.x+8, y:(I.y+foot.y)/2, 'font-size':14,
+      fill:'#dc2626'})).textContent = 'r = ' + fmt(inc.r,2);
+
+    // панель
+    vS.textContent = fmt(inc.S, 2);
+    vp.textContent = fmt(inc.p, 2);
+    vr.textContent = fmt(inc.r2, 2);
+    vI.textContent = '(' + fmt(inc.I.x,2) + '; ' + fmt(inc.I.y,2) + ')';
+
+    var ok = Math.abs(inc.r - inc.r2) < 1e-6;
+    check.className = 'check' + (ok ? ' ok' : '');
+    check.textContent = ok
+      ? 'Проверка: r = S / p = ' + fmt(inc.S,2) + ' / ' + fmt(inc.p,2) +
+        ' = ' + fmt(inc.r2,2) + ' — совпадает с чертежом.'
+      : 'Расхождение — проверьте код.';
+  }
+
+  [ra, rb, rc].forEach(function(s){ s.addEventListener('input', draw); });
+  draw();
+})();
+</script>
+</body>
+</html>

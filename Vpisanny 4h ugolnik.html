@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вписанный четырёхугольник</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 750px; margin: 0 auto; background: white; padding: 22px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 110px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  button.preset { background: #1565c0; }
+  button.preset:hover { background: #0d47a1; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 14px; margin-top: 12px; border-radius: 4px; text-align: center; }
+  .formula .row { font-size: 17px; margin: 6px 0; color: #333; }
+  .formula .row strong { color: #d32f2f; }
+  .formula .big { font-size: 20px; font-weight: bold; }
+  .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 10px; font-size: 13px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .dot { display: inline-block; width: 14px; height: 3px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Вписанный четырёхугольник</h2>
+  <p class="desc">Сумма противоположных углов вписанного четырёхугольника равна 180°</p>
+
+  <div class="controls">
+    <label>Точка A =</label>
+    <input type="range" id="angA" min="0" max="359" step="1" value="120">
+    <span class="value" id="angAv">120°</span>
+    <button class="reset" id="reset">Сброс</button>
+  </div>
+  <div class="controls">
+    <label>Точка B =</label>
+    <input type="range" id="angB" min="0" max="359" step="1" value="30">
+    <span class="value" id="angBv">30°</span>
+  </div>
+  <div class="controls">
+    <label>Точка C =</label>
+    <input type="range" id="angC" min="0" max="359" step="1" value="300">
+    <span class="value" id="angCv">300°</span>
+  </div>
+  <div class="controls">
+    <label>Точка D =</label>
+    <input type="range" id="angD" min="0" max="359" step="1" value="200">
+    <span class="value" id="angDv">200°</span>
+  </div>
+
+  <div class="presets">
+    <button class="preset" onclick="setAngles(120, 30, 300, 200)">Пример 1</button>
+    <button class="preset" onclick="setAngles(0, 90, 180, 270)">Квадрат</button>
+    <button class="preset" onclick="setAngles(45, 135, 225, 315)">Ромб (квадрат повёрнут)</button>
+    <button class="preset" onclick="setAngles(60, 160, 260, 340)">Неровный</button>
+    <button class="preset" onclick="setAngles(10, 80, 190, 280)">Почти прямоугольник</button>
+  </div>
+
+  <svg viewBox="0 0 600 550" width="600">
+    <rect width="600" height="550" fill="#fafafa" rx="8"/>
+
+    <!-- Окружность: центр (300, 260), радиус 190 -->
+    <circle cx="300" cy="260" r="190" fill="none" stroke="#1565c0" stroke-width="3"/>
+
+    <!-- Центр -->
+    <circle cx="300" cy="260" r="4" fill="#333"/>
+    <text x="308" y="255" font-family="Arial" font-size="15" fill="#333" font-weight="bold">O</text>
+
+    <!-- Диагонали (пунктиром) -->
+    <line id="diagAC" x1="0" y1="0" x2="0" y2="0" stroke="#bbb" stroke-width="1" stroke-dasharray="6,4"/>
+    <line id="diagBD" x1="0" y1="0" x2="0" y2="0" stroke="#bbb" stroke-width="1" stroke-dasharray="6,4"/>
+
+    <!-- Стороны четырёхугольника -->
+    <line id="sideAB" x1="0" y1="0" x2="0" y2="0" stroke="#2e7d32" stroke-width="3"/>
+    <line id="sideBC" x1="0" y1="0" x2="0" y2="0" stroke="#2e7d32" stroke-width="3"/>
+    <line id="sideCD" x1="0" y1="0" x2="0" y2="0" stroke="#2e7d32" stroke-width="3"/>
+    <line id="sideDA" x1="0" y1="0" x2="0" y2="0" stroke="#2e7d32" stroke-width="3"/>
+
+    <!-- Вершины -->
+    <circle id="ptA" cx="0" cy="0" r="8" fill="#d32f2f"/>
+    <circle id="ptB" cx="0" cy="0" r="8" fill="#d32f2f"/>
+    <circle id="ptC" cx="0" cy="0" r="8" fill="#d32f2f"/>
+    <circle id="ptD" cx="0" cy="0" r="8" fill="#d32f2f"/>
+
+    <text id="labA" x="0" y="0" font-family="Arial" font-size="17" fill="#d32f2f" font-weight="bold">A</text>
+    <text id="labB" x="0" y="0" font-family="Arial" font-size="17" fill="#d32f2f" font-weight="bold">B</text>
+    <text id="labC" x="0" y="0" font-family="Arial" font-size="17" fill="#d32f2f" font-weight="bold">C</text>
+    <text id="labD" x="0" y="0" font-family="Arial" font-size="17" fill="#d32f2f" font-weight="bold">D</text>
+
+    <!-- Подписи углов -->
+    <text id="textAngA" x="0" y="0" font-family="Arial" font-size="14" fill="#1565c0" font-weight="bold">∠A</text>
+    <text id="textAngB" x="0" y="0" font-family="Arial" font-size="14" fill="#1565c0" font-weight="bold">∠B</text>
+    <text id="textAngC" x="0" y="0" font-family="Arial" font-size="14" fill="#1565c0" font-weight="bold">∠C</text>
+    <text id="textAngD" x="0" y="0" font-family="Arial" font-size="14" fill="#1565c0" font-weight="bold">∠D</text>
+  </svg>
+
+  <div class="formula">
+    <div class="row big">∠A + ∠C = <strong id="fAC">180°</strong></div>
+    <div class="row big">∠B + ∠D = <strong id="fBD">180°</strong></div>
+    <div class="row" style="font-size:15px; margin-top:10px;">
+      ∠A = <strong id="fA">70°</strong> ·
+      ∠B = <strong id="fB">110°</strong> ·
+      ∠C = <strong id="fC">110°</strong> ·
+      ∠D = <strong id="fD">70°</strong>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#2e7d32"></span> Стороны четырёхугольника</span>
+    <span><span class="dot" style="background:#bbb"></span> Диагонали</span>
+    <span><span class="dot" style="background:#d32f2f"></span> Вершины (на окружности)</span>
+  </div>
+
+  <div class="hint">
+    💡 <b>Главное свойство:</b> во вписанном четырёхугольнике сумма противоположных углов <b>всегда 180°</b>.<br>
+    💡 <b>Обратное тоже верно:</b> если ∠A + ∠C = 180° (или ∠B + ∠D = 180°), то четырёхугольник можно вписать в окружность.<br>
+    💡 Углы двигаются вместе с вершинами — сумма не меняется!
+  </div>
+</div>
+
+<script>
+(function() {
+  var angAS = document.getElementById('angA');
+  var angBS = document.getElementById('angB');
+  var angCS = document.getElementById('angC');
+  var angDS = document.getElementById('angD');
+  var angAv = document.getElementById('angAv');
+  var angBv = document.getElementById('angBv');
+  var angCv = document.getElementById('angCv');
+  var angDv = document.getElementById('angDv');
+
+  var ptA = document.getElementById('ptA');
+  var ptB = document.getElementById('ptB');
+  var ptC = document.getElementById('ptC');
+  var ptD = document.getElementById('ptD');
+  var labA = document.getElementById('labA');
+  var labB = document.getElementById('labB');
+  var labC = document.getElementById('labC');
+  var labD = document.getElementById('labD');
+
+  var sideAB = document.getElementById('sideAB');
+  var sideBC = document.getElementById('sideBC');
+  var sideCD = document.getElementById('sideCD');
+  var sideDA = document.getElementById('sideDA');
+
+  var diagAC = document.getElementById('diagAC');
+  var diagBD = document.getElementById('diagBD');
+
+  var textAngA = document.getElementById('textAngA');
+  var textAngB = document.getElementById('textAngB');
+  var textAngC = document.getElementById('textAngC');
+  var textAngD = document.getElementById('textAngD');
+
+  var fA = document.getElementById('fA');
+  var fB = document.getElementById('fB');
+  var fC = document.getElementById('fC');
+  var fD = document.getElementById('fD');
+  var fAC = document.getElementById('fAC');
+  var fBD = document.getElementById('fBD');
+
+  var resetBtn = document.getElementById('reset');
+
+  var CX = 300, CY = 260, R = 190;
+
+  function toXY(deg) {
+    // Углы в градусах: 0° — вправо, против часовой (математическое направление)
+    // В SVG ось Y вниз, поэтому cy = CY - R*sin(θ)
+    var rad = deg * Math.PI / 180;
+    return {
+      x: CX + R * Math.cos(rad),
+      y: CY - R * Math.sin(rad)
+    };
+  }
+
+  // Угол при вершине четырёхугольника, опирающийся на две соседние вершины.
+  // Вписанный угол равен половине центрального угла, опирающегося на ту же дугу (не содержащую вершину).
+  // Проще: угол при вершине P между точками Q и R вычисляется по векторам QP и RP.
+  function angleAt(P, Q, R) {
+    var v1x = Q.x - P.x, v1y = Q.y - P.y;
+    var v2x = R.x - P.x, v2y = R.y - P.y;
+    var dot = v1x * v2x + v1y * v2y;
+    var m1 = Math.sqrt(v1x * v1x + v1y * v1y);
+    var m2 = Math.sqrt(v2x * v2x + v2y * v2y);
+    if (m1 < 0.001 || m2 < 0.001) return 0;
+    var cosA = dot / (m1 * m2);
+    if (cosA > 1) cosA = 1;
+    if (cosA < -1) cosA = -1;
+    return Math.acos(cosA) * 180 / Math.PI;
+  }
+
+  function draw() {
+    var aDeg = parseFloat(angAS.value);
+    var bDeg = parseFloat(angBS.value);
+    var cDeg = parseFloat(angCS.value);
+    var dDeg = parseFloat(angDS.value);
+
+    angAv.textContent = aDeg + '°';
+    angBv.textContent = bDeg + '°';
+    angCv.textContent = cDeg + '°';
+    angDv.textContent = dDeg + '°';
+
+    var A = toXY(aDeg);
+    var B = toXY(bDeg);
+    var C = toXY(cDeg);
+    var D = toXY(dDeg);
+
+    // Вершины
+    ptA.setAttribute('cx', A.x.toFixed(1));
+    ptA.setAttribute('cy', A.y.toFixed(1));
+    ptB.setAttribute('cx', B.x.toFixed(1));
+    ptB.setAttribute('cy', B.y.toFixed(1));
+    ptC.setAttribute('cx', C.x.toFixed(1));
+    ptC.setAttribute('cy', C.y.toFixed(1));
+    ptD.setAttribute('cx', D.x.toFixed(1));
+    ptD.setAttribute('cy', D.y.toFixed(1));
+
+    // Подписи вершин — сдвинуты наружу от центра
+    function labelPos(P, name) {
+      var dx = P.x - CX, dy = P.y - CY;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      var ox = (dx / len) * 22;
+      var oy = (dy / len) * 22;
+      return { x: P.x + ox, y: P.y + oy + 5 };
+    }
+    var lpA = labelPos(A, 'A');
+    var lpB = labelPos(B, 'B');
+    var lpC = labelPos(C, 'C');
+    var lpD = labelPos(D, 'D');
+    labA.setAttribute('x', lpA.x.toFixed(1));
+    labA.setAttribute('y', lpA.y.toFixed(1));
+    labB.setAttribute('x', lpB.x.toFixed(1));
+    labB.setAttribute('y', lpB.y.toFixed(1));
+    labC.setAttribute('x', lpC.x.toFixed(1));
+    labC.setAttribute('y', lpC.y.toFixed(1));
+    labD.setAttribute('x', lpD.x.toFixed(1));
+    labD.setAttribute('y', lpD.y.toFixed(1));
+
+    // Стороны четырёхугольника: A-B, B-C, C-D, D-A
+    sideAB.setAttribute('x1', A.x.toFixed(1)); sideAB.setAttribute('y1', A.y.toFixed(1));
+    sideAB.setAttribute('x2', B.x.toFixed(1)); sideAB.setAttribute('y2', B.y.toFixed(1));
+
+    sideBC.setAttribute('x1', B.x.toFixed(1)); sideBC.setAttribute('y1', B.y.toFixed(1));
+    sideBC.setAttribute('x2', C.x.toFixed(1)); sideBC.setAttribute('y2', C.y.toFixed(1));
+
+    sideCD.setAttribute('x1', C.x.toFixed(1)); sideCD.setAttribute('y1', C.y.toFixed(1));
+    sideCD.setAttribute('x2', D.x.toFixed(1)); sideCD.setAttribute('y2', D.y.toFixed(1));
+
+    sideDA.setAttribute('x1', D.x.toFixed(1)); sideDA.setAttribute('y1', D.y.toFixed(1));
+    sideDA.setAttribute('x2', A.x.toFixed(1)); sideDA.setAttribute('y2', A.y.toFixed(1));
+
+    // Диагонали
+    diagAC.setAttribute('x1', A.x.toFixed(1)); diagAC.setAttribute('y1', A.y.toFixed(1));
+    diagAC.setAttribute('x2', C.x.toFixed(1)); diagAC.setAttribute('y2', C.y.toFixed(1));
+    diagBD.setAttribute('x1', B.x.toFixed(1)); diagBD.setAttribute('y1', B.y.toFixed(1));
+    diagBD.setAttribute('x2', D.x.toFixed(1)); diagBD.setAttribute('y2', D.y.toFixed(1));
+
+    // Углы при вершинах
+    // ∠A — между векторами AB и AD
+    var angA = angleAt(A, B, D);
+    // ∠B — между BA и BC
+    var angB = angleAt(B, A, C);
+    // ∠C — между CB и CD
+    var angC = angleAt(C, B, D);
+    // ∠D — между DC и DA
+    var angD = angleAt(D, C, A);
+
+    // Округляем
+    angA = Math.round(angA);
+    angB = Math.round(angB);
+    angC = Math.round(angC);
+    angD = Math.round(angD);
+
+    fA.textContent = angA + '°';
+    fB.textContent = angB + '°';
+    fC.textContent = angC + '°';
+    fD.textContent = angD + '°';
+    fAC.textContent = (angA + angC) + '°';
+    fBD.textContent = (angB + angD) + '°';
+
+    // Подписи углов — рисуем рядом с вершинами, внутри четырёхугольника
+    function angleLabelPos(P, Q, R) {
+      // Векторы к соседям
+      var v1x = Q.x - P.x, v1y = Q.y - P.y;
+      var v2x = R.x - P.x, v2y = R.y - P.y;
+      // Нормализуем
+      var m1 = Math.sqrt(v1x * v1x + v1y * v1y);
+      var m2 = Math.sqrt(v2x * v2x + v2y * v2y);
+      if (m1 < 0.001 || m2 < 0.001) return { x: P.x, y: P.y };
+      v1x /= m1; v1y /= m1;
+      v2x /= m2; v2y /= m2;
+      // Биссектриса
+      var bx = v1x + v2x;
+      var by = v1y + v2y;
+      var bm = Math.sqrt(bx * bx + by * by);
+      if (bm < 0.001) return { x: P.x, y: P.y };
+      bx /= bm; by /= bm;
+      var dist = 40;
+      return { x: P.x + bx * dist, y: P.y + by * dist + 5 };
+    }
+
+    var pA2 = angleLabelPos(A, B, D);
+    var pB2 = angleLabelPos(B, A, C);
+    var pC2 = angleLabelPos(C, B, D);
+    var pD2 = angleLabelPos(D, C, A);
+
+    textAngA.setAttribute('x', pA2.x.toFixed(1));
+    textAngA.setAttribute('y', pA2.y.toFixed(1));
+    textAngA.textContent = '∠A = ' + angA + '°';
+
+    textAngB.setAttribute('x', pB2.x.toFixed(1));
+    textAngB.setAttribute('y', pB2.y.toFixed(1));
+    textAngB.textContent = '∠B = ' + angB + '°';
+
+    textAngC.setAttribute('x', pC2.x.toFixed(1));
+    textAngC.setAttribute('y', pC2.y.toFixed(1));
+    textAngC.textContent = '∠C = ' + angC + '°';
+
+    textAngD.setAttribute('x', pD2.x.toFixed(1));
+    textAngD.setAttribute('y', pD2.y.toFixed(1));
+    textAngD.textContent = '∠D = ' + angD + '°';
+
+    // Если сумма не 180° (из-за того, что четырёхугольник самопересекается),
+    // покажем предупреждение
+    // Проверка самопересечения: если порядок A, B, C, D не совпадает с обходом по часовой
+    // или против часовой стрелки.
+  }
+
+  angAS.addEventListener('input', draw);
+  angBS.addEventListener('input', draw);
+  angCS.addEventListener('input', draw);
+  angDS.addEventListener('input', draw);
+
+  resetBtn.addEventListener('click', function() {
+    angAS.value = 120;
+    angBS.value = 30;
+    angCS.value = 300;
+    angDS.value = 200;
+    draw();
+  });
+
+  window.setAngles = function(a, b, c, d) {
+    angAS.value = a;
+    angBS.value = b;
+    angCS.value = c;
+    angDS.value = d;
+    draw();
+  };
+
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Теорема косинусов</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 100px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 16px; text-align: center; border-radius: 4px; line-height: 1.6; }
+  .formula strong { color: #d32f2f; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Теорема косинусов</h2>
+  <p class="desc">c² = a² + b² − 2ab·cos(C). Меняйте угол C и стороны a, b.</p>
+
+  <div class="controls">
+    <label>Угол C =</label>
+    <input type="range" id="ang" min="10" max="170" step="1" value="90">
+    <span class="value" id="angv">90°</span>
+    <label>a =</label>
+    <input type="range" id="a" min="1" max="4" step="0.1" value="3">
+    <span class="value" id="av">3.0</span>
+    <label>b =</label>
+    <input type="range" id="b" min="1" max="4" step="0.1" value="3">
+    <span class="value" id="bv">3.0</span>
+    <button id="reset">Сброс</button>
+  </div>
+
+  <svg viewBox="0 0 600 500" width="600">
+    <rect width="600" height="500" fill="#fafafa" rx="8"/>
+
+    <!-- Оси для масштаба -->
+    <line x1="30" y1="450" x2="580" y2="450" stroke="#e0e0e0" stroke-width="1"/>
+    <line x1="30" y1="50" x2="580" y2="50" stroke="#e0e0e0" stroke-width="1"/>
+
+    <!-- Треугольник -->
+    <line id="sideA" x1="0" y1="0" x2="0" y2="0" stroke="#1565c0" stroke-width="5"/>
+    <line id="sideB" x1="0" y1="0" x2="0" y2="0" stroke="#2e7d32" stroke-width="5"/>
+    <line id="sideC" x1="0" y1="0" x2="0" y2="0" stroke="#d32f2f" stroke-width="5"/>
+
+    <!-- Угол C (дуга) -->
+    <path id="angleArc" d="" fill="none" stroke="#ff6f00" stroke-width="3"/>
+
+    <!-- Вершины -->
+    <circle cx="150" cy="430" r="7" fill="#333"/>
+    <circle id="ptB" cx="0" cy="0" r="7" fill="#333"/>
+    <circle id="ptA" cx="0" cy="0" r="7" fill="#333"/>
+
+    <!-- Подписи -->
+    <text x="125" y="455" font-family="Arial" font-size="17" fill="#333" font-weight="bold">C</text>
+    <text id="labB" x="0" y="0" font-family="Arial" font-size="17" fill="#333" font-weight="bold">B</text>
+    <text id="labA" x="0" y="0" font-family="Arial" font-size="17" fill="#333" font-weight="bold">A</text>
+
+    <text id="labSideA" x="0" y="0" font-family="Arial" font-size="16" fill="#1565c0" font-weight="bold">a</text>
+    <text id="labSideB" x="0" y="0" font-family="Arial" font-size="16" fill="#2e7d32" font-weight="bold">b</text>
+    <text id="labSideC" x="0" y="0" font-family="Arial" font-size="16" fill="#d32f2f" font-weight="bold">c</text>
+
+    <!-- Инфо-текст -->
+    <text id="infoAngle" x="300" y="480" font-family="Arial" font-size="15" fill="#666" text-anchor="middle">Угол C = 90°</text>
+    <text id="infoC" x="300" y="40" font-family="Arial" font-size="16" fill="#d32f2f" text-anchor="middle" font-weight="bold">c² = 18</text>
+  </svg>
+
+  <div class="formula">
+    c² = a² + b² − 2ab·cos(C)<br>
+    c² = <strong id="fA">9</strong> + <strong id="fB">9</strong> − 2·<strong id="fA2">3</strong>·<strong id="fB2">3</strong>·cos(<strong id="fAng">90</strong>°) = <strong id="fResult">18</strong><br>
+    c = <strong id="fC">4.24</strong>
+  </div>
+
+  <div class="hint">
+    💡 При <b>C = 90°</b> слагаемое −2ab·cos(90°) = 0, и теорема превращается в <b>теорему Пифагора</b>.<br>
+    💡 При <b>C &lt; 90°</b> косинус положителен → c² &lt; a² + b².<br>
+    💡 При <b>C &gt; 90°</b> косинус отрицателен → c² &gt; a² + b².
+  </div>
+</div>
+
+<script>
+(function() {
+  var angS = document.getElementById('ang');
+  var aS = document.getElementById('a');
+  var bS = document.getElementById('b');
+  var angv = document.getElementById('angv');
+  var av = document.getElementById('av');
+  var bv = document.getElementById('bv');
+  var sideA = document.getElementById('sideA');
+  var sideB = document.getElementById('sideB');
+  var sideC = document.getElementById('sideC');
+  var ptA = document.getElementById('ptA');
+  var ptB = document.getElementById('ptB');
+  var labA = document.getElementById('labA');
+  var labB = document.getElementById('labB');
+  var labSideA = document.getElementById('labSideA');
+  var labSideB = document.getElementById('labSideB');
+  var labSideC = document.getElementById('labSideC');
+  var angleArc = document.getElementById('angleArc');
+  var infoAngle = document.getElementById('infoAngle');
+  var infoC = document.getElementById('infoC');
+  var fA = document.getElementById('fA');
+  var fB = document.getElementById('fB');
+  var fA2 = document.getElementById('fA2');
+  var fB2 = document.getElementById('fB2');
+  var fAng = document.getElementById('fAng');
+  var fResult = document.getElementById('fResult');
+  var fC = document.getElementById('fC');
+  var resetBtn = document.getElementById('reset');
+
+  // Вершина C в точке (150, 430)
+  // Сторона a (CB) — вдоль горизонтали вправо
+  // Сторона b (CA) — под углом C
+  // Масштаб: 1 единица = 80 пикселей
+
+  var Cx = 150, Cy = 430;
+  var SCALE = 80;
+
+  function draw() {
+    var angDeg = parseFloat(angS.value);
+    var a = parseFloat(aS.value);
+    var b = parseFloat(bS.value);
+
+    angv.textContent = angDeg + '°';
+    av.textContent = a.toFixed(1);
+    bv.textContent = b.toFixed(1);
+
+    var rad = angDeg * Math.PI / 180;
+
+    // B — вдоль оси X вправо от C (на расстоянии a)
+    var Bx = Cx + a * SCALE;
+    var By = Cy;
+
+    // A — под углом angDeg к оси X (против часовой — вверх)
+    var Ax = Cx + b * SCALE * Math.cos(rad);
+    var Ay = Cy - b * SCALE * Math.sin(rad);
+
+    // Стороны
+    sideA.setAttribute('x1', Cx); sideA.setAttribute('y1', Cy);
+    sideA.setAttribute('x2', Bx.toFixed(1)); sideA.setAttribute('y2', By.toFixed(1));
+
+    sideB.setAttribute('x1', Cx); sideB.setAttribute('y1', Cy);
+    sideB.setAttribute('x2', Ax.toFixed(1)); sideB.setAttribute('y2', Ay.toFixed(1));
+
+    sideC.setAttribute('x1', Ax.toFixed(1)); sideC.setAttribute('y1', Ay.toFixed(1));
+    sideC.setAttribute('x2', Bx.toFixed(1)); sideC.setAttribute('y2', By.toFixed(1));
+
+    // Точки
+    ptA.setAttribute('cx', Ax.toFixed(1));
+    ptA.setAttribute('cy', Ay.toFixed(1));
+    ptB.setAttribute('cx', Bx.toFixed(1));
+    ptB.setAttribute('cy', By.toFixed(1));
+
+    // Подписи вершин
+    labA.setAttribute('x', (Ax + 10).toFixed(1));
+    labA.setAttribute('y', (Ay + 5).toFixed(1));
+    labB.setAttribute('x', (Bx + 10).toFixed(1));
+    labB.setAttribute('y', (By + 5).toFixed(1));
+
+    // Подписи сторон
+    // Сторона a (CB) — середина
+    labSideA.setAttribute('x', ((Cx + Bx) / 2 - 5).toFixed(1));
+    labSideA.setAttribute('y', (Cy + 25).toFixed(1));
+    // Сторона b (CA) — середина
+    labSideB.setAttribute('x', ((Cx + Ax) / 2 - 15).toFixed(1));
+    labSideB.setAttribute('y', ((Cy + Ay) / 2).toFixed(1));
+    // Сторона c (AB) — середина
+    labSideC.setAttribute('x', ((Ax + Bx) / 2 + 10).toFixed(1));
+    labSideC.setAttribute('y', ((Ay + By) / 2 - 5).toFixed(1));
+
+    // Дуга угла C
+    var arcR = 35;
+    var a1x = Cx + arcR;
+    var a1y = Cy;
+    var a2x = Cx + arcR * Math.cos(rad);
+    var a2y = Cy - arcR * Math.sin(rad);
+    // Если угол > 180° (не наш случай), было бы иначе; для 10-170° — простая дуга
+    var largeArc = angDeg > 180 ? 1 : 0;
+    var d = 'M ' + a1x.toFixed(1) + ' ' + a1y.toFixed(1) +
+            ' A ' + arcR + ' ' + arcR + ' 0 ' + largeArc + ' 0 ' +
+            a2x.toFixed(1) + ' ' + a2y.toFixed(1);
+    angleArc.setAttribute('d', d);
+
+    // Вычисление стороны c
+    var cosC = Math.cos(rad);
+    var c2 = a * a + b * b - 2 * a * b * cosC;
+    var c = Math.sqrt(c2);
+
+    infoAngle.textContent = 'Угол C = ' + angDeg + '°';
+    infoC.textContent = 'c² = ' + c2.toFixed(2);
+
+    fA.textContent = (a * a).toFixed(2);
+    fB.textContent = (b * b).toFixed(2);
+    fA2.textContent = a.toFixed(1);
+    fB2.textContent = b.toFixed(1);
+    fAng.textContent = angDeg;
+    fResult.textContent = c2.toFixed(2);
+    fC.textContent = c.toFixed(2);
+  }
+
+  angS.addEventListener('input', draw);
+  aS.addEventListener('input', draw);
+  bS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    angS.value = 90;
+    aS.value = 3;
+    bS.value = 3;
+    draw();
+  });
+  draw();
+})();
+</script>
+</body>
+</html>
