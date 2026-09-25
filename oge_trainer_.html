@@ -12,6 +12,9 @@ body{margin:0;padding:20px;background:#f5f3ee;font-family:Arial,sans-serif}
 .row{padding:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 button{background:var(--gold);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer}
 button:disabled{opacity:.5;cursor:not-allowed}
+#btnAnswer{background:#16a34a}
+#btnAnswer:hover{background:#15803d}
+#btnAnswer:disabled{background:#16a34a}
 input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
 .mode.active{background:var(--teal)}
 .power-exp{
@@ -49,7 +52,7 @@ input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
 
 <div class="row">
 <input id="answer" placeholder="Ответ">
-<button onclick="checkAnswer()">Проверить</button>
+<button id="btnAnswer" onclick="checkAnswer()">Ответить</button>
 <button onclick="generateExample()">Новое задание</button>
 </div>
 
@@ -152,6 +155,7 @@ total
 fCorrect.classList.toggle('reached', stats.fractions.correct >= 15);
 pCorrect.classList.toggle('reached', stats.powers.correct >= 15);
 eCorrect.classList.toggle('reached', stats.expressions.correct >= 15);
+
 
 }
 
