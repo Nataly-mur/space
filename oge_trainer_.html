@@ -148,12 +148,10 @@ total
 ? Math.round(correct*100/total)+"%"
 : "0%";
 
-// +++ подсветка счётчика при достижении 15 верных
-if (correct >= 15){
-  allCorrect.classList.add('reached');
-} else {
-  allCorrect.classList.remove('reached');
-}
+// +++ подсветка отдельных счётчиков при 15 верных
+fCorrect.classList.toggle('reached', stats.fractions.correct >= 15);
+pCorrect.classList.toggle('reached', stats.powers.correct >= 15);
+eCorrect.classList.toggle('reached', stats.expressions.correct >= 15);
 
 }
 
