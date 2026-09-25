@@ -25,6 +25,7 @@ input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
 .bar{width:100%;border-top:3px solid var(--navy);margin:3px 0}
 #result{padding:0 30px 20px;font-size:24px;font-weight:bold}
 .stats{padding:15px;background:#faf8f4;display:flex;gap:25px;flex-wrap:wrap;font-weight:bold;color:var(--navy)}
+.stats .reached{color:var(--gold);transition:color .3s}
 </style>
 </head>
 <body>
@@ -146,6 +147,13 @@ allPercent.textContent =
 total
 ? Math.round(correct*100/total)+"%"
 : "0%";
+
+// +++ подсветка счётчика при достижении 15 верных
+if (correct >= 15){
+  allCorrect.classList.add('reached');
+} else {
+  allCorrect.classList.remove('reached');
+}
 
 }
 
