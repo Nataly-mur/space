@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>y = kx + b</title>
 <style>
   body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; }
@@ -9,6 +10,9 @@
   h2 { color: #1a237e; margin-bottom: 5px; }
   p { color: #666; font-size: 15px; font-weight: 600; margin-bottom: 15px; }
   .controls { display: flex; gap: 10px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  .ctrl { display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px; }
+  .ctrl label { white-space: nowrap; }
+  .ctrl .value { min-width: 55px; text-align: left; }
   label { font-weight: 600; font-size: 14px; }
   input[type="range"] { flex: 1; min-width: 120px; accent-color: #d32f2f; }
   .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; }
@@ -20,6 +24,22 @@
   #b { accent-color: #1565c0; }
   #bv { color: #1565c0; }
   #fb { color: #1565c0; }
+    /* ---- Мобильная адаптация ---- */
+  .stage { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 20px; }
+    p { font-size: 16px; }
+    .controls { gap: 8px; padding: 10px; }
+    .ctrl { flex: 1 1 100%; min-width: 0; }
+    .ctrl .value { min-width: 60px; }
+    label { font-size: 16px; }
+    .value { font-size: 17px; }
+    button { font-size: 15px; padding: 10px 16px; }
+    .formula { font-size: 20px; }
+  }
 </style>
 <style>
         .back-btn {
@@ -52,14 +72,19 @@
   </h2>
   <p><span style="color:#d32f2f;font-weight:900">k</span> — наклон, <span style="color:#1565c0;font-weight:900">b</span> — сдвиг по оси Oy</p>
   <div class="controls">
-    <label>k =</label>
-    <input type="range" id="k" min="-3" max="3" step="0.1" value="1">
-    <span class="value" id="kv">1.0</span>
-    <label>b =</label>
-    <input type="range" id="b" min="-3" max="3" step="0.1" value="0">
-    <span class="value" id="bv">0.0</span>
+    <div class="ctrl">
+      <label>k =</label>
+      <input type="range" id="k" min="-3" max="3" step="0.1" value="1">
+      <span class="value" id="kv">1.0</span>
+    </div>
+    <div class="ctrl">
+      <label>b =</label>
+      <input type="range" id="b" min="-3" max="3" step="0.1" value="0">
+      <span class="value" id="bv">0.0</span>
+    </div>
     <button id="reset">Сброс</button>
   </div>
+  <div class="stage"></div>
   <svg viewBox="0 0 600 500" width="600">
     <rect width="600" height="500" fill="#fafafa" rx="8"/>
     <g id="grid" stroke="#e0e0e0" stroke-width="1"></g>
@@ -80,6 +105,7 @@
     <line id="line" x1="0" y1="0" x2="0" y2="0" stroke="#d32f2f" stroke-width="4"/>
     <circle id="pt" cx="300" cy="250" r="6" fill="#1565c0"/>
   </svg>
+  </div>
   <div class="formula">y = <strong id="fk">1.0</strong>x <strong id="fb">+ 0.0</strong></div>
 </div>
 
