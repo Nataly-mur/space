@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>y = k/x — гипербола</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; font-size: 16px; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 150px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 55px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  #board { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px; }
+  .formula strong { color: #d32f2f; }
+  .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2 style="white-space:nowrap">График
+    <svg width="34" height="42" viewBox="0 0 34 42" style="vertical-align:middle;margin:0 4px;display:inline-block">
+      <text x="17" y="15" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="#d32f2f">k</text>
+      <line x1="3" y1="22" x2="31" y2="22" stroke="#1a237e" stroke-width="2.5"/>
+      <text x="17" y="40" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="#1a237e">x</text>
+    </svg>
+    (гипербола)
+  </h2>>
+  <p class="desc">Знак <span style="font-weight:900;font-size:1.35em;color:#d32f2f">k</span> <b>определяет, в каких четвертях находятся ветви графика</b></p>
+
+  <div class="controls">
+    <label>k =</label>
+    <input type="range" id="k" min="-5" max="5" step="0.1" value="2">
+    <span class="value" id="kv">2.0</span>
+    <button id="reset">Сброс</button>
+  </div>
+
+  <svg id="board" viewBox="0 0 600 500" width="600">
+    <rect width="600" height="500" fill="#fafafa" rx="8"/>
+
+    <!-- Сетка -->
+    <g stroke="#e0e0e0" stroke-width="1">
+      <line x1="100" y1="20" x2="100" y2="480"/>
+      <line x1="200" y1="20" x2="200" y2="480"/>
+      <line x1="300" y1="20" x2="300" y2="480"/>
+      <line x1="400" y1="20" x2="400" y2="480"/>
+      <line x1="500" y1="20" x2="500" y2="480"/>
+      <line x1="20" y1="50" x2="580" y2="50"/>
+      <line x1="20" y1="150" x2="580" y2="150"/>
+      <line x1="20" y1="250" x2="580" y2="250"/>
+      <line x1="20" y1="350" x2="580" y2="350"/>
+      <line x1="20" y1="450" x2="580" y2="450"/>
+    </g>
+
+    <!-- Оси -->
+    <line x1="20" y1="250" x2="585" y2="250" stroke="#333" stroke-width="2"/>
+    <line x1="300" y1="20" x2="300" y2="485" stroke="#333" stroke-width="2"/>
+    <polygon points="585,245 595,250 585,255" fill="#333"/>
+    <polygon points="295,20 300,10 305,20" fill="#333"/>
+    <text x="565" y="275" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+    <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+
+    <!-- Подписи осей -->
+    <g font-family="Arial" font-size="12" fill="#666" text-anchor="middle">
+      <text x="200" y="268">-1</text>
+      <text x="400" y="268">1</text>
+      <text x="500" y="268">2</text>
+      <text x="288" y="155">1</text>
+      <text x="288" y="355">-1</text>
+    </g>
+
+    <!-- Четверти по углам (постоянно, подсвечиваются активные) -->
+    <g font-family="Arial" font-size="22" font-weight="bold">
+      <text id="q1" x="555" y="45" text-anchor="end" fill="#bbb">I</text>
+      <text id="q2" x="45" y="45" fill="#bbb">II</text>
+      <text id="q3" x="45" y="470" fill="#bbb">III</text>
+      <text id="q4" x="555" y="470" text-anchor="end" fill="#bbb">IV</text>
+    </g>
+
+    <!-- Ветви гиперболы -->
+    <path id="branch1" fill="none" stroke="#d32f2f" stroke-width="4"/>
+    <path id="branch2" fill="none" stroke="#d32f2f" stroke-width="4"/>
+  </svg>
+
+  <div class="formula">y =
+    <svg width="46" height="56" viewBox="0 0 46 56" style="vertical-align:middle;margin:0 4px">
+      <text id="f" x="23" y="20" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#d32f2f">2.0</text>
+      <line x1="4" y1="30" x2="42" y2="30" stroke="#1a237e" stroke-width="3"/>
+      <text x="23" y="54" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#1a237e">x</text>
+    </svg>
+  </div>
+  <div class="info" id="info">Ветви в I и III четвертях</div>
+
+  <div class="hint">
+    💡 <b>k &gt; 0</b> — ветви в I и III четвертях.<br>
+    💡 <b>k &lt; 0</b> — ветви во II и IV четвертях.<br>
+    💡 Ветви никогда не пересекают оси координат и не проходят через начало координат.
+  </div>
+</div>
+
+<script>
+(function() {
+  var kS = document.getElementById('k');
+  var kvT = document.getElementById('kv');
+  var fT = document.getElementById('f');
+  var branch1 = document.getElementById('branch1');
+  var branch2 = document.getElementById('branch2');
+  var info = document.getElementById('info');
+  var resetBtn = document.getElementById('reset');
+
+  function buildBranch(k, signX) {
+    var pts = [];
+    var xMin = 0.02;
+    var xMax = 2.8;
+    if (Math.abs(k) < 0.05) {
+      return '';
+    }
+    var step = 0.02;
+    for (var x = signX * xMin; Math.abs(x) <= xMax; x += signX * step) {
+      var y = k / x;
+      var cx = 300 + 100 * x;
+      var cy = 250 - 100 * y;
+      if (cy < -50 || cy > 550) continue;
+      pts.push(cx.toFixed(1) + ',' + cy.toFixed(1));
+    }
+    if (pts.length < 2) return '';
+    return 'M ' + pts.join(' L ');
+  }
+
+  function draw() {
+    var k = parseFloat(kS.value);
+    if (Math.abs(k) < 0.05) {
+      kS.value = 0.1;
+      k = 0.1;
+    }
+    kvT.textContent = k.toFixed(1);
+    fT.textContent = k.toFixed(1);
+
+    branch1.setAttribute('d', buildBranch(k, 1));
+    branch2.setAttribute('d', buildBranch(k, -1));
+
+    if (k > 0) {
+      info.textContent = 'Ветви в I и III четвертях';
+    } else {
+      info.textContent = 'Ветви во II и IV четвертях';
+    }
+
+    // подсветка активных четвертей
+    var activeColor = (k > 0) ? '#2e7d32' : '#c62828';
+    var inactive = '#bbb';
+    document.getElementById('q1').setAttribute('fill', k > 0 ? activeColor : inactive);
+    document.getElementById('q3').setAttribute('fill', k > 0 ? activeColor : inactive);
+    document.getElementById('q2').setAttribute('fill', k < 0 ? activeColor : inactive);
+    document.getElementById('q4').setAttribute('fill', k < 0 ? activeColor : inactive);
+  }
+
+  kS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    kS.value = 2;
+    draw();
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>y = x³ — кубическая функция</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; }
+  .power-exp { font-size: 0.6em; vertical-align: super; line-height: 0; }
+  p.desc { color: #666; font-size: 14px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 110px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px; }
+  .formula strong { color: #d32f2f; }
+  .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Кубическая функция y =
+    <span style="color:#d32f2f;font-weight:bold">a</span>x<span class="power-exp">3</span>
+  </h2>
+  <p class="desc">Меняйте коэффициент <span style="font-weight:900;font-size:1.25em;color:#d32f2f">a</span> — смотрите, как меняется «крутизна» графика</p>
+
+  <div class="controls">
+    <label>a =</label>
+    <input type="range" id="a" min="-3" max="3" step="0.1" value="1">
+    <span class="value" id="av">1.0</span>
+    <button id="reset">Сброс</button>
+  </div>
+
+  <svg viewBox="0 0 600 500" width="600">
+    <rect width="600" height="500" fill="#fafafa" rx="8"/>
+
+    <!-- Сетка -->
+    <g stroke="#e0e0e0" stroke-width="1">
+      <line x1="100" y1="20" x2="100" y2="480"/>
+      <line x1="200" y1="20" x2="200" y2="480"/>
+      <line x1="300" y1="20" x2="300" y2="480"/>
+      <line x1="400" y1="20" x2="400" y2="480"/>
+      <line x1="500" y1="20" x2="500" y2="480"/>
+      <line x1="20" y1="50" x2="580" y2="50"/>
+      <line x1="20" y1="150" x2="580" y2="150"/>
+      <line x1="20" y1="250" x2="580" y2="250"/>
+      <line x1="20" y1="350" x2="580" y2="350"/>
+      <line x1="20" y1="450" x2="580" y2="450"/>
+    </g>
+
+    <!-- Оси -->
+    <line x1="20" y1="250" x2="585" y2="250" stroke="#333" stroke-width="2"/>
+    <line x1="300" y1="20" x2="300" y2="485" stroke="#333" stroke-width="2"/>
+    <polygon points="585,245 595,250 585,255" fill="#333"/>
+    <polygon points="295,20 300,10 305,20" fill="#333"/>
+    <text x="565" y="275" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+    <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+
+    <!-- Подписи осей -->
+    <g font-family="Arial" font-size="12" fill="#666" text-anchor="middle">
+      <text x="200" y="268">-1</text>
+      <text x="400" y="268">1</text>
+      <text x="500" y="268">2</text>
+      <text x="288" y="155">1</text>
+      <text x="288" y="355">-1</text>
+    </g>
+        <!-- Четверти по углам -->
+    <g font-family="Arial" font-size="22" font-weight="bold">
+      <text id="q1" x="555" y="45" text-anchor="end" fill="#bbb">I</text>
+      <text id="q2" x="45" y="45" fill="#bbb">II</text>
+      <text id="q3" x="45" y="475" fill="#bbb">III</text>
+      <text id="q4" x="555" y="475" text-anchor="end" fill="#bbb">IV</text>
+    </g>
+
+    <!-- Опорный график y = x³ (серый пунктир) -->
+    <path id="ref" fill="none" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/>
+
+    <!-- Основной график y = ax³ -->
+    <path id="curve" fill="none" stroke="#d32f2f" stroke-width="4"/>
+
+    <!-- Начало координат -->
+    <circle cx="300" cy="250" r="6" fill="#1565c0"/>
+    <text x="310" y="245" font-family="Arial" font-size="14" fill="#1565c0">(0;0)</text>
+
+    <!-- Точки (±1; ±a) -->
+    <circle id="ptP1" cx="0" cy="0" r="6" fill="#2e7d32"/>
+    <circle id="ptN1" cx="0" cy="0" r="6" fill="#2e7d32"/>
+    <text id="labP1" x="0" y="0" font-family="Arial" font-size="13" fill="#2e7d32" font-weight="bold">(1; a)</text>
+    <text id="labN1" x="0" y="0" font-family="Arial" font-size="13" fill="#2e7d32" font-weight="bold">(-1; -a)</text>
+  </svg>
+
+  <div class="formula">y = <strong id="f">1.0</strong>x<span class="power-exp">3</span></div>
+  <div class="info" id="info">Стандартный график y = x³</div>
+
+  <div class="hint">
+    💡 <b><span style="font-weight:900;color:#d32f2f">a</span> &gt; 0</b> — график идёт «из левого низа в правый верх».<br>
+    💡 <b><span style="font-weight:900;color:#d32f2f">a</span> &lt; 0</b> — график «зеркалится»: из левого верха в правый низ.<br>
+    💡 Чем больше <b>|<span style="font-weight:900;color:#d32f2f">a</span>|</b>, тем «круче» график при |x| &gt; 1 и «площе» при |x| &lt; 1.<br>
+    💡 График всегда проходит через <b>(0; 0)</b>, <b>(1; <span style="font-weight:900;color:#d32f2f">a</span>)</b> и <b>(−1; −<span style="font-weight:900;color:#d32f2f">a</span>)</b>.
+  </div>
+</div>
+
+<script>
+(function() {
+  var aS = document.getElementById('a');
+  var avT = document.getElementById('av');
+  var fT = document.getElementById('f');
+  var curve = document.getElementById('curve');
+  var ref = document.getElementById('ref');
+  var info = document.getElementById('info');
+  var ptP1 = document.getElementById('ptP1');
+  var ptN1 = document.getElementById('ptN1');
+  var labP1 = document.getElementById('labP1');
+  var labN1 = document.getElementById('labN1');
+  var resetBtn = document.getElementById('reset');
+
+  var CX = 300, CY = 250, S = 100;
+
+  function buildCurve(a) {
+    var pts = [];
+    var xMax = 2.8;
+    if (Math.abs(a) > 0.01) {
+      var xLimit = Math.pow(4.8 / Math.abs(a), 1/3);
+      xMax = Math.min(2.8, xLimit);
+    }
+    var step = xMax / 60;
+    for (var x = -xMax; x <= xMax + 0.0001; x += step) {
+      var y = a * x * x * x;
+      var cx = CX + S * x;
+      var cy = CY - S * y;
+      if (cy < 15) { continue; }
+      if (cy > 485) { continue; }
+      pts.push(cx.toFixed(1) + ',' + cy.toFixed(1));
+    }
+    if (pts.length < 2) return '';
+    return 'M ' + pts.join(' L ');
+  }
+
+  function buildRef() {
+    var pts = [];
+    var xMax = 1.8;
+    var step = xMax / 60;
+    for (var x = -xMax; x <= xMax + 0.0001; x += step) {
+      var y = x * x * x;
+      var cx = CX + S * x;
+      var cy = CY - S * y;
+      if (cy < 15) continue;
+      if (cy > 485) continue;
+      pts.push(cx.toFixed(1) + ',' + cy.toFixed(1));
+    }
+    return 'M ' + pts.join(' L ');
+  }
+
+  function draw() {
+    var a = parseFloat(aS.value);
+    if (Math.abs(a) < 0.05) {
+      a = 0.1;
+      aS.value = 0.1;
+    }
+    avT.textContent = a.toFixed(1);
+    fT.textContent = a.toFixed(1);
+
+    curve.setAttribute('d', buildCurve(a));
+    ref.setAttribute('d', buildRef());
+
+    var p1x = CX + S * 1;
+    var p1y = CY - S * a;
+    var n1x = CX - S * 1;
+    var n1y = CY + S * a;
+    var visible = Math.abs(a) <= 2.2;
+    var op = visible ? '1' : '0';
+
+    ptP1.setAttribute('cx', p1x);
+    ptP1.setAttribute('cy', p1y.toFixed(1));
+    ptP1.setAttribute('opacity', op);
+
+    ptN1.setAttribute('cx', n1x);
+    ptN1.setAttribute('cy', n1y.toFixed(1));
+    ptN1.setAttribute('opacity', op);
+
+    labP1.setAttribute('x', (p1x + 10));
+    labP1.setAttribute('y', (p1y - 5).toFixed(1));
+    labP1.setAttribute('opacity', op);
+    labP1.textContent = '(1; ' + a.toFixed(1) + ')';
+
+    labN1.setAttribute('x', (n1x - 65));
+    labN1.setAttribute('y', (n1y + 18).toFixed(1));
+    labN1.setAttribute('opacity', op);
+    labN1.textContent = '(-1; ' + (-a).toFixed(1) + ')';
+
+    if (Math.abs(a - 1) < 0.01) {
+      info.textContent = 'Стандартный график y = x³';
+    } else if (a > 0) {
+      info.innerHTML = '<b style="color:#000">a</b> > 0: график «из левого низа в правый верх», круче стандартного';
+    } else {
+      info.innerHTML = '<b style="color:#000">a</b> < 0: график «зеркалится» — из левого верха в правый низ';
+    }
+  }
+
+  aS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    aS.value = 1;
+    draw();
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Теорема Виета</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 750px; margin: 0 auto; background: white; padding: 22px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 8px 0; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 90px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  button.preset { background: #1565c0; }
+  button.preset:hover { background: #0d47a1; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 14px; margin-top: 12px; border-radius: 4px; text-align: center; }
+  .formula .row { font-size: 17px; margin: 6px 0; color: #333; }
+  .formula .row strong { color: #d32f2f; }
+  .formula .big { font-size: 20px; font-weight: bold; }
+  .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .status { text-align: center; font-size: 16px; padding: 8px; border-radius: 6px; margin-top: 10px;
+            background: #e8f5e9; color: #2e7d32;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: 700; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Теорема Виета</h2>
+  <p class="desc" style="font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:600;color:#666;line-height:1.5;margin:0 0 15px 0">
+    Для уравнения <i><span style="color:#d32f2f">a</span>x² + <span style="color:#d32f2f">b</span>x + <span style="color:#d32f2f">c</span> = 0</i>
+    при <i><span style="color:#d32f2f">a</span> ≠ 0</i>:<br>
+    <i>x₁ + x₂ = −<span style="color:#d32f2f">b</span>/<span style="color:#d32f2f">a</span></i>,
+    <i>x₁ · x₂ = <span style="color:#d32f2f">c</span>/<span style="color:#d32f2f">a</span></i>
+  </p>
+
+  <div class="controls">
+    <label>a =</label>
+    <input type="range" id="a" min="-2" max="2" step="0.1" value="1">
+    <span class="value" id="av">1.0</span>
+    <label>b =</label>
+    <input type="range" id="b" min="-8" max="8" step="0.5" value="-5">
+    <span class="value" id="bv">-5.0</span>
+    <label>c =</label>
+    <input type="range" id="c" min="-10" max="10" step="0.5" value="6">
+    <span class="value" id="cv">6.0</span>
+    <button class="reset" id="reset">Сброс</button>
+  </div>
+
+  <div class="presets">
+    <button class="preset" onclick="setPreset(1, 2, 3)">x² − 5x + 6</button>
+    <button class="preset" onclick="setPreset(1, -4, 4)">x² + 4x + 4</button>
+    <button class="preset" onclick="setPreset(1, 0, -4)">x² − 4</button>
+    <button class="preset" onclick="setPreset(1, 1, 1)">x² − x + 1</button>
+    <button class="preset" onclick="setPreset(-1, 0, 4)">−x² + 4</button>
+    <button class="preset" onclick="setPreset(-1, 3, -2)">−x² − 3x − 2</button>
+  </div>
+
+  <svg viewBox="0 0 600 540" width="600">
+    <defs>
+      <clipPath id="plotArea">
+        <rect x="20" y="20" width="560" height="520"/>
+      </clipPath>
+    </defs>
+
+    <rect width="600" height="540" fill="#fafafa" rx="8"/>
+
+    <g id="grid" stroke="#e0e0e0" stroke-width="1"></g>
+
+    <g clip-path="url(#plotArea)">
+      <path id="curve" fill="none" stroke="#d32f2f" stroke-width="4"/>
+    </g>
+
+    <!-- Оси -->
+    <line x1="20" y1="300" x2="585" y2="300" stroke="#333" stroke-width="2"/>
+    <line x1="300" y1="20" x2="300" y2="525" stroke="#333" stroke-width="2"/>
+    <polygon points="585,295 595,300 585,305" fill="#333"/>
+    <polygon points="295,20 300,10 305,20" fill="#333"/>
+    <text x="565" y="325" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+    <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+
+    <g id="axisLabels" font-family="Arial" font-size="12" fill="#666" text-anchor="middle"></g>
+
+    <line id="axis" x1="300" y1="20" x2="300" y2="520" stroke="#4caf50" stroke-width="2" stroke-dasharray="8,6"/>
+
+    <circle id="root1" cx="0" cy="0" r="8" fill="#2e7d32" opacity="0"/>
+    <circle id="root2" cx="0" cy="0" r="8" fill="#2e7d32" opacity="0"/>
+    <text id="label1" x="0" y="0" font-family="Arial" font-size="14" fill="#2e7d32" font-weight="bold" opacity="0">x₁</text>
+    <text id="label2" x="0" y="0" font-family="Arial" font-size="14" fill="#2e7d32" font-weight="bold" opacity="0">x₂</text>
+
+    <circle id="vertex" cx="0" cy="0" r="7" fill="#ff6f00"/>
+
+    <circle id="ptC" cx="300" cy="0" r="6" fill="#1565c0"/>
+    <text id="labC" x="0" y="0" font-family="Arial" font-size="14" fill="#1565c0" font-weight="bold">(0; c)</text>
+  </svg>
+
+  <div class="status" id="status">D > 0 — два корня</div>
+
+  <div class="formula">
+    <div class="row big"><strong id="fa">1.0</strong>x² <strong id="fb">− 5.0</strong>x <strong id="fc">+ 6.0</strong> = 0</div>
+    <div class="row">x₁ + x₂ = <strong id="fsum">5.0</strong> ( = −b/a )</div>
+    <div class="row">x₁ · x₂ = <strong id="fprod">6.0</strong> ( = c/a )</div>
+    <div class="row" id="rowRoots">x₁ = <strong id="fr1">2.0</strong>, x₂ = <strong id="fr2">3.0</strong></div>
+  </div>
+
+  <div class="info" id="info">Корни целые — удобный пример</div>
+
+  <div class="hint">
+    💡 <b>a &gt; 0</b> — ветви параболы вверх; <b>a &lt; 0</b> — ветви вниз.<br>
+    💡 <b>Сумма корней</b> = −b/a, <b>произведение</b> = c/a.<br>
+    💡 При <b>a = 1</b> формулы упрощаются: x₁ + x₂ = −b, x₁ · x₂ = c.<br>
+    💡 Если <b>D &lt; 0</b> — корней нет, теорема Виета неприменима.
+  </div>
+</div>
+
+<script>
+(function() {
+  var aS = document.getElementById('a');
+  var bS = document.getElementById('b');
+  var cS = document.getElementById('c');
+  var av = document.getElementById('av');
+  var bv = document.getElementById('bv');
+  var cv = document.getElementById('cv');
+  var curve = document.getElementById('curve');
+  var axis = document.getElementById('axis');
+  var vertex = document.getElementById('vertex');
+  var root1 = document.getElementById('root1');
+  var root2 = document.getElementById('root2');
+  var label1 = document.getElementById('label1');
+  var label2 = document.getElementById('label2');
+  var ptC = document.getElementById('ptC');
+  var labC = document.getElementById('labC');
+  var fa = document.getElementById('fa');
+  var fb = document.getElementById('fb');
+  var fc = document.getElementById('fc');
+  var fsum = document.getElementById('fsum');
+  var fprod = document.getElementById('fprod');
+  var rowRoots = document.getElementById('rowRoots');
+  var fr1 = document.getElementById('fr1');
+  var fr2 = document.getElementById('fr2');
+  var status = document.getElementById('status');
+  var info = document.getElementById('info');
+  var resetBtn = document.getElementById('reset');
+
+  var CX = 300, CY = 300, S = 50;
+
+  var PLOT_LEFT = 20, PLOT_RIGHT = 580;
+  var PLOT_TOP = 20, PLOT_BOTTOM = 540;
+
+  function toPx(x, y) {
+    return { px: CX + S * x, py: CY - S * y };
+  }
+
+  function buildGrid() {
+    var g = document.getElementById('grid');
+    while (g.firstChild) g.removeChild(g.firstChild);
+    var NS = 'http://www.w3.org/2000/svg';
+    var i, l;
+    for (i = -10; i <= 10; i++) {
+      var x = CX + i * S;
+      if (x < 20 || x > 580) continue;
+      l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', x); l.setAttribute('y1', 20);
+      l.setAttribute('x2', x); l.setAttribute('y2', 540);
+      g.appendChild(l);
+    }
+    for (i = -10; i <= 10; i++) {
+      var y = CY + i * S;
+      if (y < 20 || y > 540) continue;
+      l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', 20); l.setAttribute('y1', y);
+      l.setAttribute('x2', 580); l.setAttribute('y2', y);
+      g.appendChild(l);
+    }
+  }
+
+  function buildLabels() {
+    var g = document.getElementById('axisLabels');
+    while (g.firstChild) g.removeChild(g.firstChild);
+    var NS = 'http://www.w3.org/2000/svg';
+    var i, t;
+    for (i = -5; i <= 5; i++) {
+      if (i === 0) continue;
+      var x = CX + i * S;
+      t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', 318);
+      t.textContent = i;
+      g.appendChild(t);
+    }
+    for (i = -5; i <= 5; i++) {
+      if (i === 0) continue;
+      var y = CY - i * S;
+      t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', 288);
+      t.setAttribute('y', y + 4);
+      t.textContent = i;
+      g.appendChild(t);
+    }
+  }
+
+  function buildCurvePath(a, b, c) {
+    var xLeft = (PLOT_LEFT - CX) / S;
+    var xRight = (PLOT_RIGHT - CX) / S;
+
+    var segments = [];
+    var currentSegment = [];
+    var step = 0.05;
+
+    for (var x = xLeft; x <= xRight + 0.0001; x += step) {
+      var y = a * x * x + b * x + c;
+      var px = CX + S * x;
+      var py = CY - S * y;
+      var inside = py >= PLOT_TOP && py <= PLOT_BOTTOM;
+      if (inside) {
+        currentSegment.push({ x: px, y: py });
+      } else {
+        if (currentSegment.length >= 2) segments.push(currentSegment);
+        currentSegment = [];
+      }
+    }
+    if (currentSegment.length >= 2) segments.push(currentSegment);
+
+    var path = '';
+    for (var i = 0; i < segments.length; i++) {
+      var seg = segments[i];
+      path += 'M ' + seg[0].x.toFixed(1) + ' ' + seg[0].y.toFixed(1);
+      for (var j = 1; j < seg.length; j++) {
+        path += ' L ' + seg[j].x.toFixed(1) + ' ' + seg[j].y.toFixed(1);
+      }
+    }
+    return path;
+  }
+
+  function draw() {
+    var a = parseFloat(aS.value);
+    if (Math.abs(a) < 0.1) {
+      a = a >= 0 ? 0.1 : -0.1;
+      aS.value = a;
+    }
+    var b = parseFloat(bS.value);
+    var c = parseFloat(cS.value);
+
+    av.textContent = a.toFixed(1);
+    bv.textContent = b.toFixed(1);
+    cv.textContent = c.toFixed(1);
+
+    fa.textContent = a.toFixed(1);
+    fb.textContent = (b >= 0 ? '+ ' : '− ') + Math.abs(b).toFixed(1);
+    fc.textContent = (c >= 0 ? '+ ' : '− ') + Math.abs(c).toFixed(1);
+
+    fsum.textContent = (-b / a).toFixed(2);
+    fprod.textContent = (c / a).toFixed(2);
+
+    var D = b * b - 4 * a * c;
+
+    buildGrid();
+    buildLabels();
+
+    curve.setAttribute('d', buildCurvePath(a, b, c));
+
+    var vx = -b / (2 * a);
+    var vy = -D / (4 * a);
+    var vp = toPx(vx, vy);
+    var vVisible = vp.px >= PLOT_LEFT && vp.px <= PLOT_RIGHT &&
+                   vp.py >= PLOT_TOP && vp.py <= PLOT_BOTTOM;
+    if (vVisible) {
+      vertex.setAttribute('opacity', '1');
+      vertex.setAttribute('cx', vp.px.toFixed(1));
+      vertex.setAttribute('cy', vp.py.toFixed(1));
+    } else {
+      vertex.setAttribute('opacity', '0');
+    }
+
+    axis.setAttribute('x1', vp.px.toFixed(1));
+    axis.setAttribute('x2', vp.px.toFixed(1));
+    axis.setAttribute('opacity', vVisible || (vp.px >= PLOT_LEFT && vp.px <= PLOT_RIGHT) ? '1' : '0');
+
+    var cp = toPx(0, c);
+    var cVisible = cp.px >= PLOT_LEFT && cp.px <= PLOT_RIGHT &&
+                   cp.py >= PLOT_TOP && cp.py <= PLOT_BOTTOM;
+    ptC.setAttribute('opacity', cVisible ? '1' : '0');
+    labC.setAttribute('opacity', cVisible ? '1' : '0');
+    if (cVisible) {
+      ptC.setAttribute('cx', cp.px.toFixed(1));
+      ptC.setAttribute('cy', cp.py.toFixed(1));
+      labC.setAttribute('x', (cp.px + 10).toFixed(1));
+      labC.setAttribute('y', (cp.py - 8).toFixed(1));
+    }
+
+    if (D >= 0) {
+      var x1 = (-b - Math.sqrt(D)) / (2 * a);
+      var x2 = (-b + Math.sqrt(D)) / (2 * a);
+      if (x1 > x2) { var tmp = x1; x1 = x2; x2 = tmp; }
+
+      var p1 = toPx(x1, 0);
+      var p2 = toPx(x2, 0);
+
+      var p1InX = p1.px >= PLOT_LEFT && p1.px <= PLOT_RIGHT;
+      var p2InX = p2.px >= PLOT_LEFT && p2.px <= PLOT_RIGHT;
+
+      root1.setAttribute('opacity', p1InX ? '1' : '0');
+      root2.setAttribute('opacity', p2InX ? '1' : '0');
+      label1.setAttribute('opacity', p1InX ? '1' : '0');
+      label2.setAttribute('opacity', p2InX ? '1' : '0');
+
+      if (p1InX) {
+        root1.setAttribute('cx', p1.px.toFixed(1));
+        root1.setAttribute('cy', p1.py.toFixed(1));
+        label1.setAttribute('x', (p1.px - 5).toFixed(1));
+        label1.setAttribute('y', (p1.py + 25).toFixed(1));
+      }
+      if (p2InX) {
+        root2.setAttribute('cx', p2.px.toFixed(1));
+        root2.setAttribute('cy', p2.py.toFixed(1));
+        label2.setAttribute('x', (p2.px - 5).toFixed(1));
+        label2.setAttribute('y', (p2.py + 25).toFixed(1));
+      }
+
+      rowRoots.style.display = 'block';
+      fr1.textContent = x1.toFixed(2);
+      fr2.textContent = x2.toFixed(2);
+    } else {
+      root1.setAttribute('opacity', '0');
+      root2.setAttribute('opacity', '0');
+      label1.setAttribute('opacity', '0');
+      label2.setAttribute('opacity', '0');
+      rowRoots.style.display = 'none';
+    }
+
+    if (D > 0.001) {
+      status.innerHTML = '<b style="font-weight:900">D</b> = <span style="font-family:Arial,sans-serif;font-style:normal">' + D.toFixed(2) + '</span> &gt; 0 — два различных корня';
+    } else if (Math.abs(D) <= 0.001) {
+      status.innerHTML = '<b style="font-weight:900">D</b> = <span style="font-family:Arial,sans-serif;font-style:normal">0</span> — один корень (кратный)';
+    } else {
+      status.innerHTML = '<b style="font-weight:900">D</b> = <span style="font-family:Arial,sans-serif;font-style:normal">' + D.toFixed(2) + '</span> &lt; 0 — корней нет';
+    }
+
+    if (D < 0) {
+      info.textContent = 'Теорема Виета неприменима — корней нет';
+    } else if (Math.abs(D) < 0.001) {
+      info.textContent = 'Один корень: x = ' + (-b / (2 * a)).toFixed(2);
+    } else {
+      var x1 = (-b - Math.sqrt(D)) / (2 * a);
+      var x2 = (-b + Math.sqrt(D)) / (2 * a);
+      if (Math.abs(x1 - Math.round(x1)) < 0.01 && Math.abs(x2 - Math.round(x2)) < 0.01) {
+        info.textContent = '✓ Корни целые: x₁ = ' + Math.round(x1) + ', x₂ = ' + Math.round(x2);
+      } else {
+        info.textContent = 'Корни нецелые — теорема Виета всё равно работает';
+      }
+    }
+  }
+
+  aS.addEventListener('input', draw);
+  bS.addEventListener('input', draw);
+  cS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    aS.value = 1;
+    bS.value = -5;
+    cS.value = 6;
+    draw();
+  });
+
+  window.setPreset = function(a, b, c) {
+    aS.value = a;
+    bS.value = b;
+    cS.value = c;
+    draw();
+  };
+
+  draw();
+})();
+</script>
+</body>
+</html>

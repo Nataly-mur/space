@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>y = kx + b</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin-bottom: 5px; }
+  p { color: #666; font-size: 15px; font-weight: 600; margin-bottom: 15px; }
+  .controls { display: flex; gap: 10px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 120px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  button:hover { background: #424242; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px; }
+  .formula strong { color: #d32f2f; }
+  #b { accent-color: #1565c0; }
+  #bv { color: #1565c0; }
+  #fb { color: #1565c0; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>График y =
+    <span style="color:#d32f2f;font-weight:bold">k</span>x
+    + <span style="color:#1565c0;font-weight:bold">b</span>
+  </h2>
+  <p><span style="color:#d32f2f;font-weight:900">k</span> — наклон, <span style="color:#1565c0;font-weight:900">b</span> — сдвиг по оси Oy</p>
+  <div class="controls">
+    <label>k =</label>
+    <input type="range" id="k" min="-3" max="3" step="0.1" value="1">
+    <span class="value" id="kv">1.0</span>
+    <label>b =</label>
+    <input type="range" id="b" min="-3" max="3" step="0.1" value="0">
+    <span class="value" id="bv">0.0</span>
+    <button id="reset">Сброс</button>
+  </div>
+  <svg viewBox="0 0 600 500" width="600">
+    <rect width="600" height="500" fill="#fafafa" rx="8"/>
+    <g id="grid" stroke="#e0e0e0" stroke-width="1"></g>
+    <line x1="20" y1="250" x2="585" y2="250" stroke="#333" stroke-width="2"/>
+    <line x1="300" y1="20" x2="300" y2="485" stroke="#333" stroke-width="2"/>
+    <polygon points="580,245 590,250 580,255" fill="#333"/>
+    <polygon points="295,20 300,10 305,20" fill="#333"/>
+    <text x="560" y="275" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+    <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+    <g id="axisLabels" font-family="Arial" font-size="12" fill="#666" text-anchor="middle"></g>
+        <!-- Четверти по углам -->
+    <g font-family="Arial" font-size="22" font-weight="bold">
+      <text id="q1" x="565" y="45" text-anchor="end" fill="#bbb">I</text>
+      <text id="q2" x="35" y="45" fill="#bbb">II</text>
+      <text id="q3" x="35" y="475" fill="#bbb">III</text>
+      <text id="q4" x="565" y="475" text-anchor="end" fill="#bbb">IV</text>
+    </g>
+    <line id="line" x1="0" y1="0" x2="0" y2="0" stroke="#d32f2f" stroke-width="4"/>
+    <circle id="pt" cx="300" cy="250" r="6" fill="#1565c0"/>
+  </svg>
+  <div class="formula">y = <strong id="fk">1.0</strong>x <strong id="fb">+ 0.0</strong></div>
+</div>
+
+<script>
+var kS = document.getElementById('k');
+var bS = document.getElementById('b');
+var kvT = document.getElementById('kv');
+var bvT = document.getElementById('bv');
+var fkT = document.getElementById('fk');
+var fbT = document.getElementById('fb');
+var line = document.getElementById('line');
+var pt = document.getElementById('pt');
+var resetBtn = document.getElementById('reset');
+
+var S = 55;           // масштаб: 1 единица = 40px
+var CX = 300;         // начало координат по X (пиксели)
+var CY = 250;         // начало координат по Y (пиксели)
+
+function buildGrid() {
+  var grid = document.getElementById('grid');
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+  var NS = 'http://www.w3.org/2000/svg';
+  var i, l;
+  for (i = -10; i <= 10; i++) {
+    var x = CX + i * S;
+    if (x < 20 || x > 585) continue;
+    l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', x); l.setAttribute('y1', 20);
+    l.setAttribute('x2', x); l.setAttribute('y2', 480);
+    grid.appendChild(l);
+  }
+  for (i = -10; i <= 10; i++) {
+    var y = CY + i * S;
+    if (y < 20 || y > 480) continue;
+    l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', 20); l.setAttribute('y1', y);
+    l.setAttribute('x2', 585); l.setAttribute('y2', y);
+    grid.appendChild(l);
+  }
+}
+
+function buildLabels() {
+  var g = document.getElementById('axisLabels');
+  while (g.firstChild) g.removeChild(g.firstChild);
+  var NS = 'http://www.w3.org/2000/svg';
+  var i, t;
+  // по оси X
+  for (i = -4; i <= 4; i++) {
+    if (i === 0) continue;
+    var x = CX + i * S;
+    t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x);
+    t.setAttribute('y', 268);
+    t.textContent = i;
+    g.appendChild(t);
+  }
+  // по оси Y
+  for (i = -4; i <= 4; i++) {
+    if (i === 0) continue;
+    var y = CY - i * S;
+    t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', 288);
+    t.setAttribute('y', y + 4);
+    t.textContent = i;
+    g.appendChild(t);
+  }
+}
+
+function draw() {
+  var k = parseFloat(kS.value);
+  var b = parseFloat(bS.value);
+  kvT.textContent = k.toFixed(1);
+  bvT.textContent = b.toFixed(1);
+  fkT.textContent = k.toFixed(1);
+  fbT.textContent = (b >= 0 ? '+ ' : '− ') + Math.abs(b).toFixed(1);
+
+  buildGrid();
+  buildLabels();
+
+  // y = kx + b. Пиксели: cx = CX + S*x, cy = CY - S*y
+  var x1 = 30, y1 = CY - S * (k * (x1 - CX) / S + b);
+  var x2 = 570, y2 = CY - S * (k * (x2 - CX) / S + b);
+
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2);
+  line.setAttribute('y2', y2);
+
+  // Точка (0; b)
+  pt.setAttribute('cx', CX);
+  pt.setAttribute('cy', (CY - S * b).toFixed(1));
+    // подсветка четвертей, через которые проходит прямая
+  var active = { q1: false, q2: false, q3: false, q4: false };
+
+  // Точки пересечения прямой с осями:
+  // с осью Y: (0; b) → четверть по знаку b
+  // с осью X: (-b/k; 0) если k != 0
+  // Для более точного определения четвертей — проверим,
+  // проходит ли прямая через каждую четверть на видимой области.
+
+  // Простой подход: смотрим значения y на краях видимой области
+  // при x = -4 и x = +4 (в единицах), и поведение знаков.
+  var yLeft  = k * (-4) + b;   // y в точке x = -4
+  var yRight = k * ( 4) + b;   // y в точке x = +4
+
+  // Для каждой четверти: проходит ли прямая через её "угол"
+  // (x знак, y знак меняются на прямых линиях).
+  // Проверим знаки y при x = -4 и x = +4, и знаки x на границе.
+  // Учитывая, что y монотонно меняется, прямая проходит через четверть,
+  // если знак x и знак y хотя бы где-то совпадают.
+
+  // Перебираем несколько точек на прямой в видимой области.
+  for (var xx = -4; xx <= 4; xx += 0.5) {
+    var yy = k * xx + b;
+    if (xx > 0 && yy > 0) active.q1 = true;
+    if (xx < 0 && yy > 0) active.q2 = true;
+    if (xx < 0 && yy < 0) active.q3 = true;
+    if (xx > 0 && yy < 0) active.q4 = true;
+  }
+
+  var onColor = '#2e7d32';
+  var offColor = '#bbb';
+  document.getElementById('q1').setAttribute('fill', active.q1 ? onColor : offColor);
+  document.getElementById('q2').setAttribute('fill', active.q2 ? onColor : offColor);
+  document.getElementById('q3').setAttribute('fill', active.q3 ? onColor : offColor);
+  document.getElementById('q4').setAttribute('fill', active.q4 ? onColor : offColor);
+}
+
+kS.addEventListener('input', draw);
+bS.addEventListener('input', draw);
+resetBtn.addEventListener('click', function() {
+  kS.value = 1;
+  bS.value = 0;
+  draw();
+});
+draw();
+</script>
+</body>
+</html>
