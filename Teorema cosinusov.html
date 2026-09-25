@@ -19,8 +19,30 @@
   .formula strong { color: #d32f2f; }
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
 </style>
+<style>
+        .back-btn {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 44px;
+            height: 44px;
+            background: #0066cc;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 999;
+        }
+        .back-btn:hover {
+            background: #0052a3;
+        }
+    </style>
 </head>
 <body>
+    <a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
   <h2>Теорема косинусов</h2>
   <p class="desc">c² = a² + b² − 2ab·cos(C). Меняйте угол C и стороны a, b.</p>
