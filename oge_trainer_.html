@@ -30,8 +30,30 @@ input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
 .stats{padding:15px;background:#faf8f4;display:flex;gap:25px;flex-wrap:wrap;font-weight:bold;color:var(--navy)}
 .stats .reached{color:var(--gold);transition:color .3s}
 </style>
+<style>
+        .back-btn {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 44px;
+            height: 44px;
+            background: #0066cc;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 999;
+        }
+        .back-btn:hover {
+            background: #0052a3;
+        }
+    </style>
 </head>
 <body>
+    <a href="index.html" class="back-btn">&#8592;</a>
 <div class="app">
 <div class="header">Подготовка к ОГЭ по математике</div>
 
