@@ -20,8 +20,30 @@
   .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
 </style>
+<style>
+        .back-btn {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 44px;
+            height: 44px;
+            background: #0066cc;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 999;
+        }
+        .back-btn:hover {
+            background: #0052a3;
+        }
+    </style>
 </head>
 <body>
+    <a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
   <h2 style="white-space:nowrap">График
     <svg width="34" height="42" viewBox="0 0 34 42" style="vertical-align:middle;margin:0 4px;display:inline-block">
