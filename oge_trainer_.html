@@ -18,8 +18,27 @@ button:disabled{opacity:.5;cursor:not-allowed}
 input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
 .mode.active{background:var(--teal)}
 .power-exp{
-    font-size:0.55em;
-    vertical-align:super;
+    font-size:0.45em;
+    position:relative;
+    top:-1em;
+    margin-left:1px;
+}
+.root{
+    display:inline-flex;
+    align-items:flex-start;
+    color:#244167;
+    font-weight:bold;
+}
+
+.root-sign{
+    font-size:1em;
+    line-height:1;
+}
+
+.root-value{
+    border-top:3px solid #244167;
+    padding:2px 6px 0 6px;
+    margin-left:-4px;
 }
 #task{padding:30px;font-size:34px;min-height:100px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--navy)}
 .fraction{display:inline-flex;flex-direction:column;align-items:center;min-width:55px}
@@ -219,9 +238,181 @@ function generateFractions(){
 }
 
 function generatePowers(){
- let a=rnd(2,9), n=rnd(2,4);
- correctAnswer=String(a**n);
- task.innerHTML=`${a}<span class="power-exp">${n}</span> = ?`;
+
+    const type = rnd(0,9);
+
+    let a,b,n,x;
+
+    switch(type){
+
+        // 0. Простая степень
+        case 0:
+
+            a = rnd(2,9);
+            n = rnd(2,4);
+
+            correctAnswer = String(a**n);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">${n}</span> = ?`;
+
+            break;
+
+        // 1. Квадратный корень
+        case 1:
+
+            const squares =
+                [4,9,16,25,36,49,64,81,100];
+
+            a =
+                squares[
+                    rnd(0,squares.length-1)
+                ];
+
+            correctAnswer =
+                String(Math.sqrt(a));
+
+            task.innerHTML =
+             `
+             <span class="root">
+             <span class="root-sign">√</span>
+             <span class="root-value">${a}</span>
+             </span>
+             = ?
+             `;
+
+            break;
+
+        // 2. Куб числа
+        case 2:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a*a*a);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">3</span> = ?`;
+
+            break;
+
+        // 3. Корень из квадрата
+        case 3:
+
+            x = rnd(2,12);
+
+            correctAnswer =
+                String(x);
+
+            task.innerHTML =
+`
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">
+        ${x}<span class="power-exp">2</span>
+    </span>
+</span>
+= ?
+`;
+
+            break;
+
+        // 4. Отрицательная степень
+        case 4:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                `1/${a*a}`;
+
+            task.innerHTML =
+                `${a}<span class="power-exp">-2</span> = ?`;
+
+            break;
+
+        // 5. Произведение степеней
+        case 5:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a**5);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">2</span> · ${a}<span class="power-exp">3</span> = ?`;
+
+            break;
+
+        // 6. Деление степеней
+        case 6:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a**2);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">4</span> : ${a}<span class="power-exp">2</span> = ?`;
+
+            break;
+
+        // 7. Степень степени
+        case 7:
+
+            a = rnd(2,4);
+
+            correctAnswer =
+                String((a*a)*(a*a));
+
+            task.innerHTML =
+                `(${a}<span class="power-exp">2</span>)<span class="power-exp">2</span> = ?`;
+
+            break;
+
+        // 8. Корень произведения
+        case 8:
+
+            a = rnd(2,9);
+
+            b = rnd(2,9);
+
+            correctAnswer =
+                String(a*b);
+            task.innerHTML =
+`
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">
+        ${a*a}·${b*b}
+    </span>
+</span>
+= ?
+`;
+            
+
+            break;
+
+                // 9. Смешанное выражение
+        case 9:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a*a + 4);
+
+            task.innerHTML =
+`
+${a}<span class="power-exp">2</span> +
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">16</span>
+</span>
+= ?
+`;
+
+
+            break;
+    }
 }
 
 function generateExpressions(){
