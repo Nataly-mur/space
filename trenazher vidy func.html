@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Соответствие графиков и формул</title>
+<style>
+  :root{
+    --bg:#f5f3ee; --card:#fff; --ink:#244167; --muted:#6b7280;
+    --line:#e5e7eb; --ok:#16a34a; --err:#8A282F; --gold:#C08A2F;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);padding:20px}
+  .app{max-width:700px;margin:0 auto;background:var(--card);
+       border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.12);
+       padding:20px;overflow:hidden}
+  h1{font-size:22px;margin:0 0 6px;text-align:center}
+  p.sub{color:var(--muted);font-size:14px;margin:0 0 14px;text-align:center}
+
+  .stage{background:#fafafa;border-radius:12px;padding:6px;margin-bottom:14px;
+         overflow-x:auto;-webkit-overflow-scrolling:touch}
+  svg{display:block;margin:0 auto;max-width:100%}
+
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  @media (max-width:520px){ .options{grid-template-columns:1fr} }
+  .opt{padding:14px;border:2px solid var(--line);background:#fff;
+       border-radius:10px;cursor:pointer;font-size:17px;font-weight:600;
+       color:var(--ink);text-align:center;user-select:none;
+       font-family: Georgia, 'Times New Roman', serif;
+       transition:all .15s}
+  .opt:hover{background:#f3f4f6;border-color:#c9cfd6}
+  .opt.correct{background:#ecfdf3;border-color:var(--ok);color:var(--ok)}
+  .opt.wrong{background:#fef2f2;border-color:var(--err);color:var(--err)}
+  .opt.disabled{pointer-events:none;opacity:.85}
+
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  button.main{flex:1 1 140px;padding:12px 16px;border:none;border-radius:10px;
+    font-size:16px;font-weight:700;cursor:pointer;color:#fff;background:var(--gold)}
+  button.main:hover{opacity:.9}
+
+  #result{min-height:24px;font-size:16px;font-weight:700;text-align:center;
+          margin-bottom:10px}
+  #result.ok{color:var(--ok)}
+  #result.err{color:var(--err)}
+
+  .stats{display:flex;justify-content:space-around;gap:10px;flex-wrap:wrap;
+         background:#f8f9fb;padding:12px;border-radius:10px;
+         font-weight:700;font-size:15px}
+  .stats .reached{color:var(--gold)}
+
+  .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999}
+  .back-btn:hover{background:#0052a3}
+
+  @media (max-width:600px){
+    body{padding:10px}
+    .app{padding:14px;border-radius:12px}
+    h1{font-size:19px}
+    .opt{padding:12px;font-size:16px}
+    button.main{font-size:16px;padding:13px 14px}
+    .stats{font-size:14px}
+  }
+</style>
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<div class="app">
+  <h1>График → формула</h1>
+  <p class="sub">Определите вид функции по её графику</p>
+
+  <div class="stage">
+    <svg id="board" viewBox="0 0 600 480" width="600">
+      <rect width="600" height="480" fill="#fafafa" rx="8"/>
+      <g id="grid" stroke="#e8e8e8" stroke-width="1"></g>
+      <line id="xaxis" x1="20" y1="240" x2="585" y2="240" stroke="#333" stroke-width="2"/>
+      <line id="yaxis" x1="300" y1="20" x2="300" y2="465" stroke="#333" stroke-width="2"/>
+      <polygon points="585,235 595,240 585,245" fill="#333"/>
+      <polygon points="295,20 300,10 305,20" fill="#333"/>
+      <text x="565" y="265" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+      <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+            <!-- Четверти по углам -->
+      <g id="quarters" font-family="Arial" font-size="22" font-weight="bold">
+        <text id="q1" x="565" y="45" text-anchor="end" fill="#bbb">I</text>
+        <text id="q2" x="35" y="45" fill="#bbb">II</text>
+        <text id="q3" x="35" y="465" fill="#bbb">III</text>
+        <text id="q4" x="565" y="465" text-anchor="end" fill="#bbb">IV</text>
+      </g>
+      <path id="curve" fill="none" stroke="#d32f2f" stroke-width="4"/>
+      <circle cx="300" cy="240" r="4" fill="#1565c0"/>
+    </svg>
+  </div>
+
+  <div class="options" id="options"></div>
+
+  <div class="btns">
+    <button class="main" id="btnNew">Новое задание</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="stats">
+    <div>Заданий: <span id="sTotal">0</span></div>
+    <div>Верно: <span id="sCorrect">0</span></div>
+    <div>Процент: <span id="sPct">0%</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var curve = document.getElementById('curve');
+  var grid = document.getElementById('grid');
+  var optionsBox = document.getElementById('options');
+  var result = document.getElementById('result');
+  var btnNew = document.getElementById('btnNew');
+  var sTotal = document.getElementById('sTotal');
+  var sCorrect = document.getElementById('sCorrect');
+  var sPct = document.getElementById('sPct');
+
+  var CX = 300, CY = 240, S = 50;
+
+  var current = null;
+  var answered = false;
+  var total = 0, correct = 0;
+
+  function rnd(min, max){
+    return min + Math.floor(Math.random()*(max-min+1));
+  }
+  function pick(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  // ---------- форматирование формул ----------
+
+  function formatLinear(k, b){
+    var s = '';
+    if (k === 1) s = 'x';
+    else if (k === -1) s = '−x';
+    else s = k + 'x';
+    if (b !== 0){
+      s += (b > 0 ? ' + ' : ' − ') + Math.abs(b);
+    }
+    return s;
+  }
+
+  function formatQuad(a, c){
+    var s = '';
+    if (a === 1) s = 'x²';
+    else if (a === -1) s = '−x²';
+    else s = a + 'x²';
+    if (c !== 0){
+      s += (c > 0 ? ' + ' : ' − ') + Math.abs(c);
+    }
+    return s;
+  }
+
+  function formatCubic(a){
+    if (a === 1) return 'x³';
+    if (a === -1) return '−x³';
+    return a + 'x³';
+  }
+
+  // ---------- виды функций ----------
+
+  var kinds = {
+
+    linear: function(){
+      var k = pick([-1, 1, 2]);
+      var b = pick([-2, -1, 0, 1, 2]);
+      return {
+        fn: function(x){ return k*x + b; },
+        formula: 'y = ' + formatLinear(k, b)
+      };
+    },
+
+    quad: function(){
+      var a = pick([-1, 1]);
+      var c = pick([-2, -1, 0, 1, 2]);
+      return {
+        fn: function(x){ return a*x*x + c; },
+        formula: 'y = ' + formatQuad(a, c)
+      };
+    },
+
+    hyper: function(){
+      var k = pick([-3, -2, 2, 3]);
+      return {
+        fn: function(x){ if (Math.abs(x) < 1e-6) return null; return k/x; },
+        formula: 'y = ' + k + '/x'
+      };
+    },
+
+    cubic: function(){
+      var a = pick([-1, 1]);
+      return {
+        fn: function(x){ return a*x*x*x; },
+        formula: 'y = ' + formatCubic(a)
+      };
+    },
+
+    sqrt: function(){
+      var a = pick([-1, 1]);
+      return {
+        fn: function(x){ if (x < 0) return null; return a * Math.sqrt(x); },
+        formula: (a === 1) ? 'y = √x' : 'y = −√x'
+      };
+    }
+
+  };
+
+  var kindKeys = ['linear', 'quad', 'hyper', 'cubic', 'sqrt'];
+
+  function makeTask(){
+    var shuffled = shuffle(kindKeys.slice());
+    var correctKey = shuffled[0];
+    var wrongKeys = shuffled.slice(1, 4);
+
+    var correctKind = kinds[correctKey]();
+    var wrongs = wrongKeys.map(function(k){ return kinds[k]().formula; });
+
+    return {
+      fn: correctKind.fn,
+      formula: correctKind.formula,
+      wrongs: wrongs
+    };
+  }
+
+  // ---------- сетка ----------
+
+  function buildGrid(){
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+    var NS = 'http://www.w3.org/2000/svg';
+    var i, l;
+    for (i = -6; i <= 6; i++){
+      var x = CX + i*S;
+      if (x < 10 || x > 590) continue;
+      l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', x); l.setAttribute('y1', 20);
+      l.setAttribute('x2', x); l.setAttribute('y2', 465);
+      grid.appendChild(l);
+    }
+    for (i = -5; i <= 5; i++){
+      var y = CY + i*S;
+      if (y < 20 || y > 465) continue;
+      l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', 20); l.setAttribute('y1', y);
+      l.setAttribute('x2', 590); l.setAttribute('y2', y);
+      grid.appendChild(l);
+    }
+  }
+
+  // ---------- построение кривой ----------
+
+  function buildCurve(fn){
+    var segs = [];
+    var cur = [];
+    var step = 0.03;
+    for (var x = -6; x <= 6; x += step){
+      var y = fn(x);
+      if (y === null || isNaN(y) || !isFinite(y)){
+        if (cur.length >= 2) segs.push(cur);
+        cur = [];
+        continue;
+      }
+      var px = CX + S*x;
+      var py = CY - S*y;
+      if (py < -100 || py > 600){
+        if (cur.length >= 2) segs.push(cur);
+        cur = [];
+        continue;
+      }
+      cur.push({ px:px, py:py });
+    }
+    if (cur.length >= 2) segs.push(cur);
+
+    var path = '';
+    for (var i = 0; i < segs.length; i++){
+      var s = segs[i];
+      path += 'M ' + s[0].px.toFixed(1) + ' ' + s[0].py.toFixed(1);
+      for (var j = 1; j < s.length; j++){
+        path += ' L ' + s[j].px.toFixed(1) + ' ' + s[j].py.toFixed(1);
+      }
+    }
+    return path;
+  }
+
+  // Определяем, через какие четверти проходит график,
+  // и подсвечиваем соответствующие подписи
+  function highlightQuarters(fn){
+    var active = { q1:false, q2:false, q3:false, q4:false };
+    for (var x = -5; x <= 5; x += 0.25){
+      var y = fn(x);
+      if (y === null || isNaN(y) || !isFinite(y)) continue;
+      if (x > 0 && y > 0) active.q1 = true;
+      if (x < 0 && y > 0) active.q2 = true;
+      if (x < 0 && y < 0) active.q3 = true;
+      if (x > 0 && y < 0) active.q4 = true;
+    }
+    var onColor = '#2e7d32';
+    var offColor = '#bbb';
+    document.getElementById('q1').setAttribute('fill', active.q1 ? onColor : offColor);
+    document.getElementById('q2').setAttribute('fill', active.q2 ? onColor : offColor);
+    document.getElementById('q3').setAttribute('fill', active.q3 ? onColor : offColor);
+    document.getElementById('q4').setAttribute('fill', active.q4 ? onColor : offColor);
+  }
+  // ---------- логика задания ----------
+
+  function newTask(){
+    var task = makeTask();
+    current = task;
+    answered = false;
+    result.textContent = '';
+    result.className = '';
+
+    buildGrid();
+    curve.setAttribute('d', buildCurve(task.fn));
+    highlightQuarters(task.fn);
+
+    var all = shuffle([task.formula].concat(task.wrongs));
+
+    optionsBox.innerHTML = '';
+    all.forEach(function(f){
+      var div = document.createElement('div');
+      div.className = 'opt';
+      div.textContent = f;
+      div.addEventListener('click', function(){
+        if (answered) return;
+        onChoose(div, f);
+      });
+      optionsBox.appendChild(div);
+    });
+  }
+
+  function onChoose(el, formula){
+    answered = true;
+    var isRight = (formula === current.formula);
+
+    var all = optionsBox.querySelectorAll('.opt');
+    all.forEach(function(o){
+      o.classList.add('disabled');
+      if (o.textContent === current.formula) o.classList.add('correct');
+    });
+    if (!isRight) el.classList.add('wrong');
+
+    total++;
+    if (isRight){
+      correct++;
+      result.className = 'ok';
+      result.textContent = '✓ Верно';
+    } else {
+      result.className = 'err';
+      result.textContent = '✗ Правильный ответ: ' + current.formula;
+    }
+
+    sTotal.textContent = total;
+    sCorrect.textContent = correct;
+    sPct.textContent = total ? Math.round(correct*100/total) + '%' : '0%';
+
+    if (correct >= 15) sCorrect.classList.add('reached');
+    else sCorrect.classList.remove('reached');
+  }
+
+  btnNew.addEventListener('click', newTask);
+  newTask();
+})();
+</script>
+</body>
+</html>
