@@ -22,8 +22,7 @@
   .stage { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px;
              display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: nowrap; }
-  .formula .val { font-weight: bold; color: #d32f2f; }
-  .formula .root-n { font-weight: bold; color: #1a237e; }
+  .formula svg { vertical-align: middle; }
   .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
   .hint b { color: #d32f2f; }
@@ -61,16 +60,17 @@
 <body>
 <a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
-  <h2>Степени и корни</h2>
+  <h2>Функции: степени, корни, модуль</h2>
   <p class="desc">Как меняется график при изменении показателя степени и корня</p>
 
   <div class="modes">
     <button class="mode active" id="modePower" onclick="setMode('power')">y = xⁿ</button>
     <button class="mode" id="modeRoot" onclick="setMode('root')">y = ⁿ√x</button>
+    <button class="mode" id="modeAbs" onclick="setMode('abs')">y = |x|</button>
   </div>
 
   <div class="controls">
-    <div class="ctrl">
+    <div class="ctrl" id="ctrlWrap">
       <label id="ctrlLabel">n =</label>
       <input type="range" id="n" min="-3" max="4" step="1" value="2">
       <span class="value" id="nv">2</span>
@@ -82,7 +82,6 @@
     <svg id="board" viewBox="0 0 600 500" width="600">
       <rect width="600" height="500" fill="#fafafa" rx="8"/>
 
-      <!-- Сетка -->
       <g stroke="#e0e0e0" stroke-width="1">
         <line x1="100" y1="20" x2="100" y2="480"/>
         <line x1="200" y1="20" x2="200" y2="480"/>
@@ -96,7 +95,6 @@
         <line x1="20" y1="450" x2="580" y2="450"/>
       </g>
 
-      <!-- Оси -->
       <line x1="20" y1="250" x2="585" y2="250" stroke="#333" stroke-width="2"/>
       <line x1="300" y1="20" x2="300" y2="485" stroke="#333" stroke-width="2"/>
       <polygon points="585,245 595,250 585,255" fill="#333"/>
@@ -104,7 +102,6 @@
       <text x="565" y="275" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
       <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
 
-      <!-- Подписи осей -->
       <g font-family="Arial" font-size="12" fill="#666" text-anchor="middle">
         <text x="200" y="268">-1</text>
         <text x="400" y="268">1</text>
@@ -113,20 +110,13 @@
         <text x="288" y="355">-1</text>
       </g>
 
-      <!-- Опорный график y = x (серая прямая, для сравнения) -->
       <line id="ref" x1="0" y1="0" x2="0" y2="0" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/>
-
-      <!-- Основной график -->
       <path id="curve" fill="none" stroke="#d32f2f" stroke-width="4"/>
-
-      <!-- Начало координат -->
       <circle cx="300" cy="250" r="5" fill="#1565c0"/>
     </svg>
   </div>
 
-  <div class="formula" id="formula">
-    y = x<span class="val" id="fpow">2</span>
-  </div>
+  <div class="formula" id="formula"></div>
   <div class="info" id="info">Квадратичная функция — чётная степень</div>
 
   <div class="hint" id="hint">
@@ -147,18 +137,17 @@
   var hint = document.getElementById('hint');
   var formula = document.getElementById('formula');
   var ctrlLabel = document.getElementById('ctrlLabel');
+  var ctrlWrap = document.getElementById('ctrlWrap');
   var resetBtn = document.getElementById('reset');
 
-  var mode = 'power';   // 'power' | 'root'
+  var mode = 'power';   // 'power' | 'root' | 'abs'
 
   var CX = 300, CY = 250, S = 100;
 
-  // Точка в пиксели
   function toPx(x, y) {
     return { px: CX + S * x, py: CY - S * y };
   }
 
-  // Строит путь, разрывая, если выходит за пределы viewBox
   function buildPath(pointsFn, xFrom, xTo, step) {
     var path = '';
     var started = false;
@@ -169,7 +158,6 @@
         continue;
       }
       var p = toPx(x, y);
-      // границы рисования в пикселях
       if (p.px < -50 || p.px > 650 || p.py < -50 || p.py > 550) {
         started = false;
         continue;
@@ -184,32 +172,30 @@
     return path;
   }
 
-  // y = x^n для целого n (включая отрицательные)
   function powerFn(n) {
     return function(x) {
-      if (n < 0 && Math.abs(x) < 1e-6) return null;  // разрыв в 0
+      if (n < 0 && Math.abs(x) < 1e-6) return null;
       if (n < 0) return 1 / Math.pow(x, -n);
       return Math.pow(x, n);
     };
   }
 
-  // y = ⁿ√x = x^(1/n)
-  // При чётном n — только x >= 0
-  // При нечётном n — вся ось
   function rootFn(n) {
     return function(x) {
       if (n % 2 === 0) {
         if (x < 0) return null;
         return Math.pow(x, 1 / n);
       } else {
-        // нечётный корень — определён для любого x
         if (x < 0) return -Math.pow(-x, 1 / n);
         return Math.pow(x, 1 / n);
       }
     };
   }
 
-  // Опорная прямая y = x — для сравнения
+  function absFn(x) {
+    return Math.abs(x);
+  }
+
   function drawRef() {
     var p1 = toPx(-2.8, -2.8);
     var p2 = toPx(2.8, 2.8);
@@ -219,36 +205,65 @@
     ref.setAttribute('y2', p2.py);
   }
 
+  // ---- Формулы через SVG ----
+
+  // y = xⁿ  (n — верхний регистр)
+  function formulaPower(n) {
+    return (
+      '<span>y = x</span>' +
+      '<svg width="14" height="24" viewBox="0 0 14 24" style="vertical-align:middle;margin-left:-2px">' +
+        '<text x="6" y="13" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#d32f2f">' + n + '</text>' +
+      '</svg>'
+    );
+  }
+
+  // ⁿ√x  (n — маленький индекс вверху слева от корня, козырёк над x)
+    function formulaRoot(n) {
+    return (
+      '<span>y = </span>' +
+      '<svg width="78" height="36" viewBox="0 0 78 36" style="vertical-align:middle">' +
+        // индекс корня n (сверху слева, ближе к знаку)
+        '<text x="9" y="11" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#d32f2f">' + n + '</text>' +
+        // знак корня с козырьком
+        '<polyline points="14,22 19,22 25,32 34,6 72,6" fill="none" stroke="#1a237e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        // подкоренное x
+        '<text x="50" y="26" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="#1a237e">x</text>' +
+      '</svg>'
+    );
+  }
+
+  // y = |x|  (модуль — две вертикальные черты вокруг x)
+  function formulaAbs() {
+    return (
+      '<span>y = </span>' +
+      '<svg width="42" height="30" viewBox="0 0 42 30" style="vertical-align:middle">' +
+        '<line x1="8" y1="4" x2="8" y2="26" stroke="#1a237e" stroke-width="2.2"/>' +
+        '<line x1="34" y1="4" x2="34" y2="26" stroke="#1a237e" stroke-width="2.2"/>' +
+        '<text x="21" y="21" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="#d32f2f">x</text>' +
+      '</svg>'
+    );
+  }
+
   function draw() {
     var n = parseInt(nS.value, 10);
     nvT.textContent = n;
     drawRef();
 
     if (mode === 'power') {
+      ctrlWrap.style.display = '';
       ctrlLabel.textContent = 'n =';
-      formula.innerHTML = 'y = x<span class="val" id="fpow">' + n + '</span>';
-
+      formula.innerHTML = formulaPower(n);
       curve.setAttribute('d', buildPath(powerFn(n), -2.8, 2.8, 0.02));
 
-      if (n === 1) {
-        info.textContent = 'Линейная функция y = x — прямая через начало координат';
-      } else if (n === 2) {
-        info.textContent = 'Квадратичная функция — чётная степень, парабола';
-      } else if (n === 3) {
-        info.textContent = 'Кубическая функция — нечётная степень';
-      } else if (n === 4) {
-        info.textContent = 'Чётная степень — парабола, круче квадратичной';
-      } else if (n === -1) {
-        info.textContent = 'Гипербола y = 1/x — две ветви в I и III четвертях';
-      } else if (n === -2) {
-        info.textContent = 'y = 1/x² — чётная функция, ветви в I и II четвертях';
-      } else if (n === -3) {
-        info.textContent = 'y = 1/x³ — нечётная функция, ветви в I и III четвертях';
-      } else if (n < 0) {
-        info.textContent = 'Отрицательная степень — график-гипербола';
-      } else {
-        info.textContent = 'Степенная функция с показателем n = ' + n;
-      }
+      if (n === 1)       info.textContent = 'Линейная функция y = x — прямая через начало координат';
+      else if (n === 2)  info.textContent = 'Квадратичная функция — чётная степень, парабола';
+      else if (n === 3)  info.textContent = 'Кубическая функция — нечётная степень';
+      else if (n === 4)  info.textContent = 'Чётная степень — парабола, круче квадратичной';
+      else if (n === -1) info.textContent = 'Гипербола y = 1/x — две ветви в I и III четвертях';
+      else if (n === -2) info.textContent = 'y = 1/x² — чётная функция, ветви в I и II четвертях';
+      else if (n === -3) info.textContent = 'y = 1/x³ — нечётная функция, ветви в I и III четвертях';
+      else if (n < 0)    info.textContent = 'Отрицательная степень — график-гипербола';
+      else               info.textContent = 'Степенная функция с показателем n = ' + n;
 
       hint.innerHTML =
         '💡 <b>Чётная степень</b> (n = 2, 4) — график симметричен относительно Oy, ветви вверх.<br>' +
@@ -256,29 +271,35 @@
         '💡 <b>n &lt; 0</b> — график-гипербола: две ветви, не проходит через 0.<br>' +
         '💡 Все графики проходят через точку <b>(1; 1)</b>.';
 
-    } else {
+    } else if (mode === 'root') {
+      ctrlWrap.style.display = '';
       ctrlLabel.textContent = 'n =';
-      // в режиме корня n от 2 до 5
       if (n < 2) { n = 2; nS.value = 2; nvT.textContent = 2; }
-      formula.innerHTML = '<span class="root-n">' + n + '</span>√x &nbsp;(y = x<sup>1/' + n + '</sup>)';
-
+      formula.innerHTML = formulaRoot(n);
       curve.setAttribute('d', buildPath(rootFn(n), -2.8, 2.8, 0.02));
 
-      if (n === 2) {
-        info.textContent = 'Квадратный корень — область определения x ≥ 0';
-      } else if (n === 3) {
-        info.textContent = 'Кубический корень — определён для всех x';
-      } else if (n % 2 === 0) {
-        info.textContent = 'Корень чётной степени — область определения x ≥ 0';
-      } else {
-        info.textContent = 'Корень нечётной степени — определён для всех x';
-      }
+      if (n === 2)         info.textContent = 'Квадратный корень — область определения x ≥ 0';
+      else if (n === 3)    info.textContent = 'Кубический корень — определён для всех x';
+      else if (n % 2 === 0) info.textContent = 'Корень чётной степени — область определения x ≥ 0';
+      else                 info.textContent = 'Корень нечётной степени — определён для всех x';
 
       hint.innerHTML =
         '💡 <b>Корень чётной степени</b> (√, ⁴√) — только x ≥ 0.<br>' +
         '💡 <b>Корень нечётной степени</b> (³√, ⁵√) — определён для любого x.<br>' +
         '💡 Все графики корней проходят через <b>(0; 0)</b> и <b>(1; 1)</b>.<br>' +
         '💡 С ростом n график растёт медленнее.';
+
+    } else if (mode === 'abs') {
+      ctrlWrap.style.display = 'none';
+      formula.innerHTML = formulaAbs();
+      curve.setAttribute('d', buildPath(absFn, -2.8, 2.8, 0.02));
+
+      info.textContent = 'Модуль — «галка» из двух лучей, выходящих из начала координат';
+      hint.innerHTML =
+        '💡 <b>y = |x|</b> — всегда неотрицательна (y ≥ 0).<br>' +
+        '💡 Проходит через <b>(0; 0)</b>, <b>(1; 1)</b>, <b>(−1; 1)</b>.<br>' +
+        '💡 График симметричен относительно оси <b>Oy</b> — функция чётная.<br>' +
+        '💡 Состоит из двух лучей: y = x при x ≥ 0 и y = −x при x < 0.';
     }
   }
 
@@ -286,6 +307,7 @@
     mode = m;
     document.getElementById('modePower').classList.toggle('active', m === 'power');
     document.getElementById('modeRoot').classList.toggle('active', m === 'root');
+    document.getElementById('modeAbs').classList.toggle('active', m === 'abs');
     if (m === 'root') {
       nS.min = 2;
       nS.max = 5;
@@ -299,11 +321,7 @@
 
   nS.addEventListener('input', draw);
   resetBtn.addEventListener('click', function() {
-    if (mode === 'power') {
-      nS.value = 2;
-    } else {
-      nS.value = 2;
-    }
+    nS.value = 2;
     draw();
   });
 
