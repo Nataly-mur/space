@@ -157,23 +157,53 @@
   padding: 0 4px;
 }
 
-.burger-panel h3 {
-  margin: 18px 20px 6px;
-  font-size: 14px;
-  color: #0066cc;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 4px;
-}
-.burger-panel a {
-  display: block;
-  padding: 11px 20px;
-  color: #333;
-  text-decoration: none;
-  font-size: 15px;
-  transition: background .15s;
-}
+/* Заголовок группы — кликабельный */
+  .burger-group-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 14px 20px;
+    font-size: 15px;
+    color: #0066cc;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background .15s;
+  }
+  .burger-group-title:hover { background: #f5f9ff; }
+  .burger-group-title::after {
+    content: '▾';
+    font-size: 14px;
+    color: #0066cc;
+    transition: transform .2s;
+  }
+  .burger-group.open .burger-group-title::after {
+    transform: rotate(180deg);
+  }
+
+/* Сворачиваемый список ссылок */
+  .burger-group-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease;
+  }
+  .burger-group.open .burger-group-list {
+    max-height: 600px;
+  }
+  .burger-group-list a {
+    display: block;
+    padding: 11px 20px 11px 32px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    transition: background .15s;
+  }
+  .burger-group-list a:hover { background: #eef4ff; color: #0066cc; }
 .burger-panel a:hover { background: #eef4ff; color: #0066cc; }
 
 /* Сдвигаем уже существующую кнопку "назад", чтобы не пересекалась с бургером */
@@ -488,26 +518,38 @@
     <button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>
   </div>
 
-  <h3>Математика</h3>
-  <a href="NOK NOD na krugah 36.html">Дроби на кругах</a>
-  <a href="DZ NOK NOD.html">Тренажёр НОК НОД</a>
-  <a href="oge_trainer_.html">Тренажёр Дроби, степени ОГЭ</a>
+  <div class="burger-group" data-group="math">
+    <div class="burger-group-title">Математика</div>
+    <div class="burger-group-list">
+      <a href="NOK NOD na krugah 36.html">Дроби на кругах</a>
+      <a href="DZ NOK NOD.html">Тренажёр НОК НОД</a>
+      <a href="oge_trainer_.html">Тренажёр Дроби, степени ОГЭ</a>
+    </div>
+  </div>
 
-  <h3>Алгебра</h3>
-  <a href="pryamaya kx 1.html">Линейная</a>
-  <a href="giperbola.html">Обратная пропорц. (Гипербола)</a>
-  <a href="Parabola + teorema Vieta new.html">Квадратичная (Парабола) + Теорема Виета</a>
-  <a href="Kubicheskaya f.html">Кубическая</a>
-  <a href="kornevaya f.html">Корневая</a>
-  <a href="vse func.html">Степень аргумента Х</a>
-  <a href="trenazher vidy func.html">Тренажёр виды функций</a>
-  <a href="parabola tren.html">Тренажёр парабола</a>
+  <div class="burger-group" data-group="algebra">
+    <div class="burger-group-title">Алгебра</div>
+    <div class="burger-group-list">
+      <a href="pryamaya kx 1.html">Линейная</a>
+      <a href="giperbola.html">Обратная пропорц. (Гипербола)</a>
+      <a href="Parabola + teorema Vieta new.html">Квадратичная (Парабола) + Теорема Виета</a>
+      <a href="Kubicheskaya f.html">Кубическая</a>
+      <a href="kornevaya f.html">Корневая</a>
+      <a href="vse func.html">Степень аргумента Х</a>
+      <a href="trenazher vidy func.html">Тренажёр виды функций</a>
+      <a href="parabola tren.html">Тренажёр парабола</a>
+    </div>
+  </div>
 
-  <h3>Геометрия</h3>
-  <a href="Vpisanny ugol.html">Вписанный угол</a>
-  <a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>
-  <a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>
-  <a href="Teorema cosinusov.html">Теорема косинусов</a>
+  <div class="burger-group" data-group="geometry">
+    <div class="burger-group-title">Геометрия</div>
+    <div class="burger-group-list">
+      <a href="Vpisanny ugol.html">Вписанный угол</a>
+      <a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>
+      <a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>
+      <a href="Teorema cosinusov.html">Теорема косинусов</a>
+    </div>
+  </div>
 </nav>
 <!-- ===== /Бургер-меню ===== -->
 
@@ -535,6 +577,20 @@
 
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape') close();
+  });
+
+  // +++ Аккордеон: клик по заголовку группы
+  var groups = panel.querySelectorAll('.burger-group');
+  groups.forEach(function(group){
+    var title = group.querySelector('.burger-group-title');
+    if (!title) return;
+    title.addEventListener('click', function(){
+      var wasOpen = group.classList.contains('open');
+      // закрываем все
+      groups.forEach(function(g){ g.classList.remove('open'); });
+      // если группа была закрыта — открываем её
+      if (!wasOpen) group.classList.add('open');
+    });
   });
 })();
 </script>
