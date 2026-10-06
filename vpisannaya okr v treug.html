@@ -90,8 +90,7 @@
   var vI    = document.getElementById('vI');
   var check = document.getElementById('check');
 
-  var W = 640, H = 460, PAD = 20;
-
+  var W = 640, H = 420, PAD = 12;
   // --- утилиты -----------------------------------------------------
   function el(name, attrs){
     var n = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -193,7 +192,7 @@
       // сдвиг подписи наружу от центра
       var cx = (A.x+B.x+C.x)/3, cy = (A.y+B.y+C.y)/3;
       var dx = mx-cx, dy = my-cy, len = Math.hypot(dx,dy)||1;
-      var tx = mx + dx/len*22, ty = my + dy/len*22;
+      var tx = mx + dx/len*16, ty = my + dy/len*16;
       svg.appendChild(el('text', {x:tx, y:ty, 'text-anchor':'middle',
         'dominant-baseline':'middle', 'font-size':16, 'font-weight':600,
         fill:s.col})).textContent = s.name + ' = ' + fmt(s.val,1);
