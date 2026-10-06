@@ -9,16 +9,7 @@
     --bg:#f5f3ee; --card:#fff; --ink:#244167; --muted:#6b7280;
     --line:#e5e7eb; --ok:#16a34a; --err:#8A282F; --gold:#C08A2F;
   }
-  *{box-sizing:border-box}
-  body{margin:0;font:16px/1.5 system-ui,Arial,sans-serif;
-       background:var(--bg);color:var(--ink);padding:20px}
-  .app{max-width:700px;margin:0 auto;background:var(--card);
-       border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.12);
-       padding:20px;overflow:hidden}
-  h1{font-size:22px;margin:0 0 6px;text-align:center}
-  p.sub{color:var(--muted);font-size:14px;margin:0 0 16px;text-align:center}
-
-  .formula-top{
+    .formula-top{
     text-align:center;
     font-family: Georgia, 'Times New Roman', serif;
     font-style: italic;
@@ -27,6 +18,14 @@
     margin-bottom: 10px;
     letter-spacing: 0.5px;
   }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);padding:20px}
+  .app{max-width:700px;margin:0 auto;background:var(--card);
+       border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.12);
+       padding:20px;overflow:hidden}
+  h1{font-size:22px;margin:0 0 6px;text-align:center}
+  p.sub{color:var(--muted);font-size:14px;margin:0 0 16px;text-align:center}
 
   .stage{background:#fafafa;border-radius:12px;padding:6px;margin-bottom:14px;
          overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -76,120 +75,8 @@
   .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
     background:#0066cc;color:#fff;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    text-decoration:none;font-size:20px;z-index:999;
-    transition: transform .3s ease, opacity .3s ease;}
+    text-decoration:none;font-size:20px;z-index:999}
   .back-btn:hover{background:#0052a3}
-
-  /* ===== Бургер-меню ===== */
-  .burger-btn {
-    position: fixed; top: 15px; left: 15px;
-    width: 44px; height: 44px;
-    background: #0066cc; color: #fff;
-    border: none; border-radius: 50%;
-    font-size: 22px; cursor: pointer;
-    z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .25s ease, opacity .25s ease;
-  }
-  .burger-btn:hover { background: #0052a3; }
-
-  .burger-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .4);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .25s;
-    z-index: 10000;
-  }
-  .burger-overlay.open { opacity: 1; visibility: visible; }
-
-  .burger-panel {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 300px;
-    max-width: 85vw;
-    height: 100vh;
-    background: #fff;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, .15);
-    transform: translateX(-100%);
-    transition: transform .25s;
-    z-index: 10001;
-    overflow-y: auto;
-    padding: 0 0 20px;
-  }
-  .burger-panel.open { transform: translateX(0); }
-
-  .burger-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    background: #0066cc;
-    color: #fff;
-    font-size: 18px;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-  }
-  .burger-close {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 28px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 4px;
-  }
-
-  /* Заголовок группы — кликабельный */
-  .burger-group-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-    padding: 14px 20px;
-    font-size: 15px;
-    color: #0066cc;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    font-weight: 700;
-    cursor: pointer;
-    user-select: none;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
-    transition: background .15s;
-  }
-  .burger-group-title:hover { background: #f5f9ff; }
-  .burger-group-title::after {
-    content: '▾';
-    font-size: 14px;
-    color: #0066cc;
-    transition: transform .2s;
-  }
-  .burger-group.open .burger-group-title::after {
-    transform: rotate(180deg);
-  }
-
-  /* Сворачиваемый список ссылок */
-  .burger-group-list {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height .3s ease;
-  }
-  .burger-group.open .burger-group-list {
-    max-height: 600px;
-  }
-  .burger-group-list a {
-    display: block;
-    padding: 11px 20px 11px 32px;
-    color: #333;
-    text-decoration: none;
-    font-size: 15px;
-    transition: background .15s;
-  }
-  .burger-group-list a:hover { background: #eef4ff; color: #0066cc; }
 
   @media (max-width:600px){
     body{padding:10px}
@@ -199,43 +86,33 @@
     .qlabel{font-size:16px;min-width:60px}
     .opt{padding:9px 12px;font-size:15px}
     button.main{font-size:16px;padding:13px 14px}
-
-    .burger-btn {
-      transition: transform .3s ease, opacity .3s ease;
-    }
-    .burger-btn.hidden {
-      transform: translateY(-80px);
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .back-btn.hidden {
-      transform: translateX(80px);
-      opacity: 0;
-      pointer-events: none;
-    }
   }
 </style>
+<link rel="stylesheet" href="menu.css">
 </head>
 <body>
 <a href="index.html" class="back-btn">&#8592;</a>
 <div class="app">
   <h1>Парабола: знаки a, c, D</h1>
   <p class="sub">Посмотрите на график и определите знак каждого коэффициента</p>
-  <div class="formula-top">
+    <div class="formula-top">
     y = ax² + bx + c
   </div>
   <div class="stage">
     <svg id="board" viewBox="0 0 400 340" width="400">
       <rect width="400" height="340" fill="#fafafa" rx="8"/>
+      <!-- Сетка без подписей -->
       <g stroke="#ececec" stroke-width="1" id="grid"></g>
+      <!-- Оси -->
       <line id="xaxis" x1="10" y1="220" x2="395" y2="220" stroke="#333" stroke-width="2"/>
       <line id="yaxis" x1="200" y1="10" x2="200" y2="335" stroke="#333" stroke-width="2"/>
       <polygon points="390,215 398,220 390,225" fill="#333"/>
       <polygon points="195,10 200,4 205,10" fill="#333"/>
       <text x="375" y="240" font-family="Arial" font-size="16" fill="#333" font-weight="bold">x</text>
       <text x="208" y="18" font-family="Arial" font-size="16" fill="#333" font-weight="bold">y</text>
+      <!-- Парабола -->
       <path id="curve" fill="none" stroke="#d32f2f" stroke-width="3.5"/>
+      <!-- Точка на оси Oy -->
       <circle id="ptC" cx="200" cy="220" r="5" fill="#1565c0"/>
     </svg>
   </div>
@@ -297,10 +174,12 @@
   var sCorrect = document.getElementById('sCorrect');
   var sPct = document.getElementById('sPct');
 
+  // Система координат внутри viewBox 400x340
   var CX = 200, CY = 220;
+  // Масштаб: 1 единица = 30px (по X и Y одинаково)
   var S = 30;
 
-  var current = null;
+  var current = null;       // { a, b, c, D }
   var answered = false;
   var total = 0, correct = 0;
   var selected = { a: null, c: null, D: null };
@@ -309,21 +188,28 @@
     return min + Math.floor(Math.random()*(max-min+1));
   }
 
+  // Генерируем параболу с заданным знаком D (по возможности)
   function makeTask(){
     for (var attempt = 0; attempt < 200; attempt++){
-      var a = (rnd(0,1) ? 1 : -1) * rnd(1, 3);
-      var c = rnd(-2, 3);
+      var a = (rnd(0,1) ? 1 : -1) * rnd(1, 3);          // a = ±1, ±2, ±3
+      var c = rnd(-2, 3);                                // c = -2..3 (включая 0)
+      // b подбираем так, чтобы D = b² - 4ac был разнообразным
       var b = rnd(-3, 3);
       var D = b*b - 4*a*c;
+      // Требуем: парабола должна быть видна в кадре — вершина не слишком далеко
       var vx = -b / (2*a);
       var vy = (4*a*c - b*b) / (4*a);
       if (Math.abs(vx) > 4) continue;
       if (vy < -4 || vy > 5) continue;
+      // Хотим по возможности все три случая D: >0, =0, <0
+      // — не фильтруем специально, просто принимаем как есть
       return { a:a, b:b, c:c, D:D };
     }
+    // запасной вариант
     return { a:1, b:0, c:-1, D:4 };
   }
 
+  // y = ax² + bx + c → пиксели
   function toPx(x, y){
     return { px: CX + S*x, py: CY - S*y };
   }
@@ -400,16 +286,20 @@
     buildGrid();
     curve.setAttribute('d', buildCurve(current.a, current.b, current.c));
 
+    // Точка (0; c) на оси Oy
     var cp = toPx(0, current.c);
+    // Показываем её всегда — это ключ к c
     ptC.setAttribute('cx', cp.px);
     ptC.setAttribute('cy', cp.py);
   }
 
+  // Клик по варианту ответа
   document.querySelectorAll('.opts').forEach(function(group){
-    var key = group.getAttribute('data-key');
+    var key = group.getAttribute('data-key');   // 'a' | 'c' | 'D'
     group.querySelectorAll('.opt').forEach(function(opt){
       opt.addEventListener('click', function(){
         if (answered) return;
+        // снять выделение у соседей
         group.querySelectorAll('.opt').forEach(function(o){
           o.classList.remove('sel');
         });
@@ -452,7 +342,7 @@
     });
 
     total++;
-    var sign1 = (allOk ? '✓ Верно! ' : '✗ Правильно: ');
+        var sign1 = (allOk ? '✓ Верно! ' : '✗ Правильно: ');
     var line1 = sign1 + 'a ' + expr(rightA) +
                 ', c ' + expr(rightC) + ', D ' + expr(rightD);
     var line2 = 'y = ' + formatEq(current.a, current.b, current.c);
@@ -468,21 +358,22 @@
     sCorrect.textContent = correct;
     sPct.textContent = total ? Math.round(correct*100/total) + '%' : '0%';
   }
-
   function formatEq(a, b, c){
     var s = '';
+    // ax²
     if (a === 1) s += 'x²';
     else if (a === -1) s += '−x²';
     else s += a + 'x²';
+    // bx
     if (b !== 0){
       s += (b > 0 ? ' + ' : ' − ') + (Math.abs(b) === 1 ? '' : Math.abs(b)) + 'x';
     }
+    // c
     if (c !== 0){
       s += (c > 0 ? ' + ' : ' − ') + Math.abs(c);
     }
     return s;
   }
-
   function expr(sign){
     if (sign === 'pos') return '> 0';
     if (sign === 'neg') return '< 0';
@@ -495,181 +386,6 @@
   newTask();
 })();
 </script>
-
-<!-- ===== Бургер-меню ===== -->
-<button class="burger-btn" id="burgerBtn" aria-label="Меню">&#9776;</button>
-<div class="burger-overlay" id="burgerOverlay"></div>
-
-<nav class="burger-panel" id="burgerPanel" aria-label="Навигация">
-  <div class="burger-header">
-    <span>Меню</span>
-    <button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>
-  </div>
-
-  <div class="burger-group" data-group="math">
-    <div class="burger-group-title">Математика</div>
-    <div class="burger-group-list">
-      <a href="NOK NOD na krugah 36.html">Дроби на кругах</a>
-      <a href="DZ NOK NOD.html">Тренажёр НОК НОД</a>
-      <a href="oge_trainer_.html">Тренажёр Дроби, степени ОГЭ</a>
-    </div>
-  </div>
-
-  <div class="burger-group" data-group="algebra">
-    <div class="burger-group-title">Алгебра</div>
-    <div class="burger-group-list">
-      <a href="pryamaya kx 1.html">Линейная</a>
-      <a href="giperbola.html">Обратная пропорц. (Гипербола)</a>
-      <a href="Parabola + teorema Vieta new.html">Квадратичная (Парабола) + Теорема Виета</a>
-      <a href="Kubicheskaya f.html">Кубическая</a>
-      <a href="kornevaya f.html">Корневая</a>
-      <a href="vse func.html">Степень аргумента Х</a>
-      <a href="trenazher vidy func.html">Тренажёр виды функций</a>
-      <a href="parabola tren.html">Тренажёр парабола</a>
-    </div>
-  </div>
-
-  <div class="burger-group" data-group="geometry">
-    <div class="burger-group-title">Геометрия</div>
-    <div class="burger-group-list">
-      <a href="Vpisanny ugol.html">Вписанный угол</a>
-      <a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>
-      <a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>
-      <a href="Teorema cosinusov.html">Теорема косинусов</a>
-    </div>
-  </div>
-</nav>
-<!-- ===== /Бургер-меню ===== -->
-
-<!-- ===== Скрипт бургер-меню ===== -->
-<script>
-(function(){
-  var btn = document.getElementById('burgerBtn');
-  var panel = document.getElementById('burgerPanel');
-  var overlay = document.getElementById('burgerOverlay');
-  var closeBtn = document.getElementById('burgerClose');
-  if (!btn || !panel) return;
-
-  function open(){
-    panel.classList.add('open');
-    overlay.classList.add('open');
-  }
-  function close(){
-    panel.classList.remove('open');
-    overlay.classList.remove('open');
-  }
-
-  btn.addEventListener('click', open);
-  closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', close);
-
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') close();
-  });
-
-  // Показ кнопки: только когда вернулись в самое начало страницы.
-  // Скрытие: (а) сразу при скролле вниз, (б) через 3 секунды бездействия.
-  (function(){
-    var hideTimer = null;
-    var lastY = window.pageYOffset || document.documentElement.scrollTop;
-    var TOP_ZONE = 30;
-    var HIDE_DELAY = 3000;
-
-    function hideNow(){
-      if (panel.classList.contains('open')) return;
-      btn.classList.add('hidden');
-    }
-
-    function showWithTimer(){
-      btn.classList.remove('hidden');
-      if (hideTimer) clearTimeout(hideTimer);
-      if (panel.classList.contains('open')) return;
-      hideTimer = setTimeout(hideNow, HIDE_DELAY);
-    }
-
-    function onScroll(){
-      var y = window.pageYOffset || document.documentElement.scrollTop;
-
-      if (y <= TOP_ZONE) {
-        if (btn.classList.contains('hidden')) {
-          showWithTimer();
-        }
-        lastY = y;
-        return;
-      }
-
-      if (y > lastY) {
-        if (hideTimer) clearTimeout(hideTimer);
-        hideNow();
-      }
-
-      lastY = y;
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    if (lastY <= TOP_ZONE) showWithTimer();
-  })();
-
-  // Логика для кнопки «назад» — появляется у верхнего/нижнего края,
-  // скрывается через 3 секунды без прокрутки, уезжает вправо
-  (function(){
-    var backBtn = document.querySelector('.back-btn');
-    if (!backBtn) return;
-
-    var hideTimer = null;
-    var EDGE_ZONE = 30;
-    var HIDE_DELAY = 3000;
-
-    function hideNow(){
-      backBtn.classList.add('hidden');
-    }
-
-    function showWithTimer(){
-      backBtn.classList.remove('hidden');
-      if (hideTimer) clearTimeout(hideTimer);
-      hideTimer = setTimeout(hideNow, HIDE_DELAY);
-    }
-
-    function onScroll(){
-      var y = window.pageYOffset || document.documentElement.scrollTop;
-      var maxY = (document.documentElement.scrollHeight || document.body.scrollHeight)
-                 - window.innerHeight;
-
-      var atTop = y <= EDGE_ZONE;
-      var atBottom = y >= maxY - EDGE_ZONE;
-
-      if (atTop || atBottom) {
-        if (backBtn.classList.contains('hidden')) {
-          showWithTimer();
-        }
-      }
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    var y0 = window.pageYOffset || document.documentElement.scrollTop;
-    var maxY0 = (document.documentElement.scrollHeight || document.body.scrollHeight)
-                - window.innerHeight;
-    if (y0 <= EDGE_ZONE || y0 >= maxY0 - EDGE_ZONE) {
-      showWithTimer();
-    }
-  })();
-
-  // Аккордеон: клик по заголовку группы
-  var groups = panel.querySelectorAll('.burger-group');
-  groups.forEach(function(group){
-    var title = group.querySelector('.burger-group-title');
-    if (!title) return;
-    title.addEventListener('click', function(){
-      var wasOpen = group.classList.contains('open');
-      groups.forEach(function(g){ g.classList.remove('open'); });
-      if (!wasOpen) group.classList.add('open');
-    });
-  });
-})();
-</script>
-<!-- ===== /Скрипт бургер-меню ===== -->
-
+<script src="menu.js"></script>
 </body>
 </html>
