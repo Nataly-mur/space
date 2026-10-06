@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Вписанный угол</title>
 <style>
   body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
@@ -21,31 +22,33 @@
   .legend { display: flex; gap: 20px; justify-content: center; margin-top: 10px; font-size: 13px; flex-wrap: wrap; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend .dot { display: inline-block; width: 14px; height: 3px; }
+    .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+
+  /* ===== Мобильная адаптация ===== */
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 19px; }
+    p.desc { font-size: 15px; }
+    .controls { gap: 8px; padding: 10px; flex-wrap: wrap; }
+    .controls label { font-size: 15px; min-width: 80px; }
+    input[type="range"] { min-width: 100%; order: 3; }
+    .value { font-size: 16px; min-width: 45px; }
+    button { font-size: 14px; padding: 10px 14px; }
+    .formula { font-size: 17px; }
+    .hint { font-size: 14px; }
+    .legend { font-size: 12px; gap: 12px; }
+  }
 </style>
-<style>
-        .back-btn {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 44px;
-            height: 44px;
-            background: #0066cc;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 20px;
-            z-index: 999;
-        }
-        .back-btn:hover {
-            background: #0052a3;
-        }
-    </style>
+<link rel="stylesheet" href="menu.css">
 </head>
 <body>
-    <a href="index.html" class="back-btn">&#8592;</a>
+<a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
   <h2>Вписанный угол</h2>
   <p class="desc">Вписанный угол равен половине центрального, опирающегося на ту же дугу</p>
@@ -229,5 +232,6 @@
   draw();
 })();
 </script>
+<script src="menu.js"></script>
 </body>
 </html>
