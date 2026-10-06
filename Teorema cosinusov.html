@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Теорема косинусов</title>
 <style>
   body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
@@ -20,7 +21,7 @@
   .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
 </style>
 <style>
-        .back-btn {
+                .back-btn {
             position: fixed;
             bottom: 15px;
             right: 15px;
@@ -35,11 +36,27 @@
             text-decoration: none;
             font-size: 20px;
             z-index: 999;
+            transition: transform .3s ease, opacity .3s ease;
         }
         .back-btn:hover {
             background: #0052a3;
         }
+            /* ===== Мобильная адаптация ===== */
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .box { padding: 14px; border-radius: 8px; }
+      h2 { font-size: 19px; }
+      p.desc { font-size: 15px; }
+      .controls { gap: 8px; padding: 10px; }
+      .controls label { font-size: 15px; min-width: 70px; }
+      input[type="range"] { min-width: 100%; order: 3; }
+      .value { font-size: 16px; min-width: 45px; }
+      button { font-size: 14px; padding: 10px 14px; }
+      .formula { font-size: 15px; padding: 10px; }
+      .hint { font-size: 14px; }
+    }
     </style>
+    <link rel="stylesheet" href="menu.css">
 </head>
 <body>
     <a href="index.html" class="back-btn">&#8592;</a>
@@ -239,5 +256,6 @@
   draw();
 })();
 </script>
+<script src="menu.js"></script>
 </body>
 </html>
