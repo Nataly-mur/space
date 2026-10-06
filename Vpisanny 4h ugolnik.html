@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Вписанный четырёхугольник</title>
 <style>
   body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
@@ -90,15 +91,15 @@
     <button class="preset" onclick="setAngles(10, 80, 190, 280)">Почти прямоугольник</button>
   </div>
 
-  <svg viewBox="0 0 600 550" width="600">
-    <rect width="600" height="550" fill="#fafafa" rx="8"/>
+ <svg viewBox="0 0 640 640" width="640">
+    <rect width="640" height="640" fill="#fafafa" rx="8"/>
 
-    <!-- Окружность: центр (300, 260), радиус 190 -->
-    <circle cx="300" cy="260" r="190" fill="none" stroke="#1565c0" stroke-width="3"/>
+    <!-- Окружность: центр (320, 320), радиус 280 -->
+    <circle cx="320" cy="320" r="280" fill="none" stroke="#1565c0" stroke-width="3"/>
 
     <!-- Центр -->
-    <circle cx="300" cy="260" r="4" fill="#333"/>
-    <text x="308" y="255" font-family="Arial" font-size="15" fill="#333" font-weight="bold">O</text>
+    <circle cx="320" cy="320" r="4" fill="#333"/>
+    <text x="328" y="315" font-family="Arial" font-size="15" fill="#333" font-weight="bold">O</text>
 
     <!-- Диагонали (пунктиром) -->
     <line id="diagAC" x1="0" y1="0" x2="0" y2="0" stroke="#bbb" stroke-width="1" stroke-dasharray="6,4"/>
@@ -194,7 +195,7 @@
 
   var resetBtn = document.getElementById('reset');
 
-  var CX = 300, CY = 260, R = 190;
+    var CX = 320, CY = 320, R = 280;
 
   function toXY(deg) {
     // Углы в градусах: 0° — вправо, против часовой (математическое направление)
