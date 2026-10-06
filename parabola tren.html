@@ -561,44 +561,53 @@
     if (e.key === 'Escape') close();
   });
 
-  // Скрытие кнопки при скролле вниз на мобильном
+    // Показ кнопки: только когда вернулись в самое начало страницы.
+  // Скрытие: (а) сразу при скролле вниз, (б) через 3 секунды бездействия.
   (function(){
+    var hideTimer = null;
     var lastY = window.pageYOffset || document.documentElement.scrollTop;
-    var ticking = false;
-    var THRESHOLD = 8;
+    var TOP_ZONE = 30;       // зона «самого начала»
+    var HIDE_DELAY = 3000;   // 3 секунды без скролла вниз
+
+    function hideNow(){
+      if (panel.classList.contains('open')) return;
+      btn.classList.add('hidden');
+    }
+
+    function showWithTimer(){
+      btn.classList.remove('hidden');
+      if (hideTimer) clearTimeout(hideTimer);
+      // если меню открыто — таймер не нужен
+      if (panel.classList.contains('open')) return;
+      hideTimer = setTimeout(hideNow, HIDE_DELAY);
+    }
 
     function onScroll(){
       var y = window.pageYOffset || document.documentElement.scrollTop;
 
-      if (y < 60) {
-        btn.classList.remove('hidden');
+      // вернулись в самое начало — показываем
+      if (y <= TOP_ZONE) {
+        // показываем только если кнопка скрыта (не дёргаем каждый скролл)
+        if (btn.classList.contains('hidden')) {
+          showWithTimer();
+        }
         lastY = y;
-        ticking = false;
         return;
       }
 
-      var diff = y - lastY;
-
-      if (Math.abs(diff) > THRESHOLD) {
-        if (diff > 0) {
-          btn.classList.add('hidden');
-          if (panel.classList.contains('open')) {
-            btn.classList.remove('hidden');
-          }
-        } else {
-          btn.classList.remove('hidden');
-        }
-        lastY = y;
+      // скролл вниз — прячем сразу
+      if (y > lastY) {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideNow();
       }
-      ticking = false;
+
+      lastY = y;
     }
 
-    window.addEventListener('scroll', function(){
-      if (!ticking) {
-        window.requestAnimationFrame(onScroll);
-        ticking = true;
-      }
-    }, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // при загрузке: если мы на самом верху — показываем с таймером
+    if (lastY <= TOP_ZONE) showWithTimer();
   })();
 
   // Аккордеон: клик по заголовку группы
