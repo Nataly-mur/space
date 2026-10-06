@@ -26,32 +26,36 @@
   .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .legend { display: flex; gap: 20px; justify-content: center; margin-top: 10px; font-size: 13px; flex-wrap: wrap; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .legend .dot { display: inline-block; width: 14px; height: 3px; }
+    .legend .dot { display: inline-block; width: 14px; height: 3px; }
+  .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+    /* ===== Мобильная адаптация ===== */
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 19px; }
+    p.desc { font-size: 15px; }
+    .controls { gap: 8px; padding: 10px; flex-wrap: wrap; }
+    .controls label { font-size: 15px; min-width: 80px; }
+    input[type="range"] { min-width: 100%; order: 3; }
+    .value { font-size: 16px; min-width: 45px; }
+    button { font-size: 14px; padding: 10px 14px; }
+    button.preset { font-size: 13px; padding: 8px 12px; }
+    .formula .row { font-size: 16px; }
+    .formula .big { font-size: 18px; }
+    .info { font-size: 15px; }
+    .hint { font-size: 14px; }
+    .legend { font-size: 12px; gap: 12px; }
+  }
 </style>
-<style>
-        .back-btn {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 44px;
-            height: 44px;
-            background: #0066cc;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 20px;
-            z-index: 999;
-        }
-        .back-btn:hover {
-            background: #0052a3;
-        }
-    </style>
+<link rel="stylesheet" href="menu.css">
 </head>
 <body>
-    <a href="index.html" class="back-btn">&#8592;</a>
+<a href="index.html" class="back-btn">&#8592;</a>
 <div class="box">
   <h2>Вписанный четырёхугольник</h2>
   <p class="desc">Сумма противоположных углов вписанного четырёхугольника равна 180°</p>
@@ -379,5 +383,6 @@
   draw();
 })();
 </script>
+<script src="menu.js"></script>
 </body>
 </html>
