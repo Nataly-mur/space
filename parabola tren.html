@@ -76,7 +76,8 @@
   .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
     background:#0066cc;color:#fff;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    text-decoration:none;font-size:20px;z-index:999}
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
   .back-btn:hover{background:#0052a3}
 
   /* ===== Бургер-меню ===== */
@@ -199,12 +200,17 @@
     .opt{padding:9px 12px;font-size:15px}
     button.main{font-size:16px;padding:13px 14px}
 
-    /* Мобильная версия: кнопка прячется при скролле вниз */
     .burger-btn {
       transition: transform .3s ease, opacity .3s ease;
     }
     .burger-btn.hidden {
       transform: translateY(-80px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .back-btn.hidden {
+      transform: translateX(80px);
       opacity: 0;
       pointer-events: none;
     }
@@ -561,13 +567,13 @@
     if (e.key === 'Escape') close();
   });
 
-    // Показ кнопки: только когда вернулись в самое начало страницы.
+  // Показ кнопки: только когда вернулись в самое начало страницы.
   // Скрытие: (а) сразу при скролле вниз, (б) через 3 секунды бездействия.
   (function(){
     var hideTimer = null;
     var lastY = window.pageYOffset || document.documentElement.scrollTop;
-    var TOP_ZONE = 30;       // зона «самого начала»
-    var HIDE_DELAY = 3000;   // 3 секунды без скролла вниз
+    var TOP_ZONE = 30;
+    var HIDE_DELAY = 3000;
 
     function hideNow(){
       if (panel.classList.contains('open')) return;
@@ -577,7 +583,6 @@
     function showWithTimer(){
       btn.classList.remove('hidden');
       if (hideTimer) clearTimeout(hideTimer);
-      // если меню открыто — таймер не нужен
       if (panel.classList.contains('open')) return;
       hideTimer = setTimeout(hideNow, HIDE_DELAY);
     }
@@ -585,9 +590,7 @@
     function onScroll(){
       var y = window.pageYOffset || document.documentElement.scrollTop;
 
-      // вернулись в самое начало — показываем
       if (y <= TOP_ZONE) {
-        // показываем только если кнопка скрыта (не дёргаем каждый скролл)
         if (btn.classList.contains('hidden')) {
           showWithTimer();
         }
@@ -595,7 +598,6 @@
         return;
       }
 
-      // скролл вниз — прячем сразу
       if (y > lastY) {
         if (hideTimer) clearTimeout(hideTimer);
         hideNow();
@@ -606,8 +608,52 @@
 
     window.addEventListener('scroll', onScroll, { passive: true });
 
-    // при загрузке: если мы на самом верху — показываем с таймером
     if (lastY <= TOP_ZONE) showWithTimer();
+  })();
+
+  // Логика для кнопки «назад» — появляется у верхнего/нижнего края,
+  // скрывается через 3 секунды без прокрутки, уезжает вправо
+  (function(){
+    var backBtn = document.querySelector('.back-btn');
+    if (!backBtn) return;
+
+    var hideTimer = null;
+    var EDGE_ZONE = 30;
+    var HIDE_DELAY = 3000;
+
+    function hideNow(){
+      backBtn.classList.add('hidden');
+    }
+
+    function showWithTimer(){
+      backBtn.classList.remove('hidden');
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(hideNow, HIDE_DELAY);
+    }
+
+    function onScroll(){
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      var maxY = (document.documentElement.scrollHeight || document.body.scrollHeight)
+                 - window.innerHeight;
+
+      var atTop = y <= EDGE_ZONE;
+      var atBottom = y >= maxY - EDGE_ZONE;
+
+      if (atTop || atBottom) {
+        if (backBtn.classList.contains('hidden')) {
+          showWithTimer();
+        }
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    var y0 = window.pageYOffset || document.documentElement.scrollTop;
+    var maxY0 = (document.documentElement.scrollHeight || document.body.scrollHeight)
+                - window.innerHeight;
+    if (y0 <= EDGE_ZONE || y0 >= maxY0 - EDGE_ZONE) {
+      showWithTimer();
+    }
   })();
 
   // Аккордеон: клик по заголовку группы
