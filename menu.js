@@ -41,6 +41,8 @@
           '<a href="Vpisanny ugol.html">Вписанный угол</a>' +
           '<a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>' +
           '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
+          '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
+   '<a href="okruzhnost hordy.html">Окружность. Вписаный треугольник, хорды </a>' +
           '<a href="Teorema cosinusov.html">Теорема косинусов</a>' +
         '</div>' +
       '</div>' +
