@@ -7,11 +7,11 @@
     '<button class="burger-btn" id="burgerBtn" aria-label="Меню">&#9776;</button>' +
     '<div class="burger-overlay" id="burgerOverlay"></div>' +
     '<nav class="burger-panel" id="burgerPanel" aria-label="Навигация">' +
-      '<div class="burger-header">' +
-        '<span>Меню</span>' +
+            '<div class="burger-header">' +
+        '<a href="index.html" class="burger-home">Меню</a>' +
         '<button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>' +
       '</div>' +
-
+    
       '<div class="burger-group" data-group="math">' +
         '<div class="burger-group-title">Математика</div>' +
         '<div class="burger-group-list">' +
