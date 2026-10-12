@@ -59,6 +59,14 @@
   position: sticky;
   top: 0;
 }
+.burger-home {
+  color: #fff;
+  text-decoration: none;
+  font: inherit;
+}
+.burger-home:hover {
+  text-decoration: underline;
+}
 .burger-close {
   background: transparent;
   border: none;
