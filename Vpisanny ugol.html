@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вписанный угол</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 120px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 55px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px; }
+  .formula strong { color: #d32f2f; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 10px; font-size: 13px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .dot { display: inline-block; width: 14px; height: 3px; }
+    .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+
+  /* ===== Мобильная адаптация ===== */
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 19px; }
+    p.desc { font-size: 15px; }
+    .controls { gap: 8px; padding: 10px; flex-wrap: wrap; }
+    .controls label { font-size: 15px; min-width: 80px; }
+    input[type="range"] { min-width: 100%; order: 3; }
+    .value { font-size: 16px; min-width: 45px; }
+    button { font-size: 14px; padding: 10px 14px; }
+    .formula { font-size: 17px; }
+    .hint { font-size: 14px; }
+    .legend { font-size: 12px; gap: 12px; }
+  }
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<div class="box">
+  <h2>Вписанный угол</h2>
+  <p class="desc">Вписанный угол равен половине центрального, опирающегося на ту же дугу</p>
+
+  <div class="controls">
+    <label>Дуга AB =</label>
+    <input type="range" id="arc" min="30" max="330" step="1" value="140">
+    <span class="value" id="arcv">140°</span>
+    <label>Точка C =</label>
+    <input type="range" id="posC" min="0" max="359" step="1" value="270">
+    <span class="value" id="posCv">270°</span>
+    <button id="reset">Сброс</button>
+  </div>
+
+  <div class="board-wrap">
+<svg viewBox="0 0 600 500" width="600">
+    <rect width="600" height="500" fill="#fafafa" rx="8"/>
+
+    <!-- Окружность: центр (300, 240), радиус 170 -->
+    <circle cx="300" cy="240" r="170" fill="none" stroke="#1565c0" stroke-width="3"/>
+
+    <!-- Центр -->
+    <circle cx="300" cy="240" r="4" fill="#333"/>
+    <text x="308" y="235" font-family="Arial" font-size="16" fill="#333" font-weight="bold">O</text>
+
+    <!-- Дуга AB (выделяется оранжевым) -->
+    <path id="arcPath" d="" fill="none" stroke="#ff6f00" stroke-width="6"/>
+
+    <!-- Радиусы OA, OB -->
+    <line id="oa" x1="300" y1="240" x2="300" y2="240" stroke="#4caf50" stroke-width="2"/>
+    <line id="ob" x1="300" y1="240" x2="300" y2="240" stroke="#4caf50" stroke-width="2"/>
+
+    <!-- Точки A и B -->
+    <circle id="ptA" cx="0" cy="0" r="6" fill="#2e7d32"/>
+    <circle id="ptB" cx="0" cy="0" r="6" fill="#2e7d32"/>
+    <text id="labA" x="0" y="0" font-family="Arial" font-size="16" fill="#2e7d32" font-weight="bold">A</text>
+    <text id="labB" x="0" y="0" font-family="Arial" font-size="16" fill="#2e7d32" font-weight="bold">B</text>
+
+    <!-- Вписанный угол ACB -->
+    <line id="ca" x1="0" y1="0" x2="0" y2="0" stroke="#d32f2f" stroke-width="2"/>
+    <line id="cb" x1="0" y1="0" x2="0" y2="0" stroke="#d32f2f" stroke-width="2"/>
+    <circle id="ptC" cx="0" cy="0" r="7" fill="#d32f2f"/>
+    <text id="labC" x="0" y="0" font-family="Arial" font-size="16" fill="#d32f2f" font-weight="bold">C</text>
+
+    <!-- Подписи углов -->
+    <text id="textCentral" x="300" y="465" font-family="Arial" font-size="15" fill="#2e7d32" text-anchor="middle">∠AOB = 140°</text>
+    <text id="textInscribed" x="300" y="488" font-family="Arial" font-size="17" fill="#d32f2f" text-anchor="middle" font-weight="bold">∠ACB = 70°</text>
+  </svg>
+    <canvas id="drawCanvas" width="1200" height="1000"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+    </div>
+
+  <div class="formula">∠ACB = ½ · ∠AOB = <strong id="f">70°</strong></div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#ff6f00"></span> Дуга AB (оранжевая)</span>
+    <span><span class="dot" style="background:#4caf50"></span> Центральный угол ∠AOB</span>
+    <span><span class="dot" style="background:#d32f2f"></span> Вписанный угол ∠ACB</span>
+  </div>
+
+  <div class="hint">
+    💡 Двигайте <b>точку C</b> по окружности — вписанный угол <b>не меняется</b>, пока дуга AB та же!<br>
+    💡 ∠AOB — центральный, ∠ACB — вписанный. Всегда <b>∠ACB = ½ · ∠AOB</b>.<br>
+    💡 Если C окажется на дуге AB, угол станет 180° − ½∠AOB (смежная дуга).
+  </div>
+</div>
+
+<script>
+(function() {
+  var arcS = document.getElementById('arc');
+  var posCS = document.getElementById('posC');
+  var arcv = document.getElementById('arcv');
+  var posCv = document.getElementById('posCv');
+  var arcPath = document.getElementById('arcPath');
+  var oa = document.getElementById('oa');
+  var ob = document.getElementById('ob');
+  var ptA = document.getElementById('ptA');
+  var ptB = document.getElementById('ptB');
+  var labA = document.getElementById('labA');
+  var labB = document.getElementById('labB');
+  var ca = document.getElementById('ca');
+  var cb = document.getElementById('cb');
+  var ptC = document.getElementById('ptC');
+  var labC = document.getElementById('labC');
+  var textCentral = document.getElementById('textCentral');
+  var textInscribed = document.getElementById('textInscribed');
+  var fT = document.getElementById('f');
+  var resetBtn = document.getElementById('reset');
+
+  var CX = 300, CY = 240, R = 170;
+
+  // Преобразование: угол в градусах (0° — вправо, против часовой)
+  // В SVG ось Y идёт вниз, поэтому: cx = CX + R*cos(θ), cy = CY - R*sin(θ)
+  function toXY(deg) {
+    var rad = deg * Math.PI / 180;
+    return {
+      x: CX + R * Math.cos(rad),
+      y: CY - R * Math.sin(rad)
+    };
+  }
+
+  function draw() {
+    var arcDeg = parseFloat(arcS.value);
+    var cDeg = parseFloat(posCS.value);
+    arcv.textContent = arcDeg + '°';
+    posCv.textContent = cDeg + '°';
+
+    // Размещаем A и B симметрично относительно вертикали внизу
+    // Дуга AB (нижняя) имеет градусную меру arcDeg
+    // Точки A и B: A под углом (270 - arcDeg/2)°, B под углом (270 + arcDeg/2)°
+    var aDeg = 270 - arcDeg / 2;
+    var bDeg = 270 + arcDeg / 2;
+    var A = toXY(aDeg);
+    var B = toXY(bDeg);
+    var C = toXY(cDeg);
+
+    // Точки A и B
+    ptA.setAttribute('cx', A.x.toFixed(1));
+    ptA.setAttribute('cy', A.y.toFixed(1));
+    ptB.setAttribute('cx', B.x.toFixed(1));
+    ptB.setAttribute('cy', B.y.toFixed(1));
+    labA.setAttribute('x', (A.x + 8).toFixed(1));
+    labA.setAttribute('y', (A.y + 5).toFixed(1));
+    labB.setAttribute('x', (B.x + 8).toFixed(1));
+    labB.setAttribute('y', (B.y + 5).toFixed(1));
+
+    // Радиусы OA, OB
+    oa.setAttribute('x2', A.x.toFixed(1));
+    oa.setAttribute('y2', A.y.toFixed(1));
+    ob.setAttribute('x2', B.x.toFixed(1));
+    ob.setAttribute('y2', B.y.toFixed(1));
+
+    // Точка C
+    ptC.setAttribute('cx', C.x.toFixed(1));
+    ptC.setAttribute('cy', C.y.toFixed(1));
+    labC.setAttribute('x', (C.x + 10).toFixed(1));
+    labC.setAttribute('y', (C.y + 5).toFixed(1));
+
+    // Хорды CA и CB
+    ca.setAttribute('x1', C.x.toFixed(1));
+    ca.setAttribute('y1', C.y.toFixed(1));
+    ca.setAttribute('x2', A.x.toFixed(1));
+    ca.setAttribute('y2', A.y.toFixed(1));
+    cb.setAttribute('x1', C.x.toFixed(1));
+    cb.setAttribute('y1', C.y.toFixed(1));
+    cb.setAttribute('x2', B.x.toFixed(1));
+    cb.setAttribute('y2', B.y.toFixed(1));
+
+    // Дуга AB (по нижней части)
+    // A и B — на нижней половине. Рисуем дугу от A к B через низ
+    // SVG arc: A rx ry rot large-arc sweep x y
+    // large-arc = 0 если arcDeg <= 180, 1 если > 180
+    // sweep = 0 (против часовой) или 1 (по часовой). Идём от A к B через низ → по часовой
+    var largeArc = arcDeg > 180 ? 1 : 0;
+    var d = 'M ' + A.x.toFixed(1) + ' ' + A.y.toFixed(1) +
+            ' A ' + R + ' ' + R + ' 0 ' + largeArc + ' 0 ' +
+            B.x.toFixed(1) + ' ' + B.y.toFixed(1);
+    arcPath.setAttribute('d', d);
+
+    // Угол ACB — вписанный, равен половине центрального, опирающегося на ту же дугу
+    // Но! Если C лежит на нижней дуге AB, вписанный угол опирается на верхнюю дугу
+    // Проверим, где находится C
+    var cInLowerArc = cDeg > aDeg && cDeg < bDeg;
+    var centralAngle, inscribedAngle;
+    if (cInLowerArc) {
+      centralAngle = 360 - arcDeg;
+      inscribedAngle = centralAngle / 2;
+    } else {
+      centralAngle = arcDeg;
+      inscribedAngle = arcDeg / 2;
+    }
+
+    textCentral.textContent = '∠AOB = ' + arcDeg + '°';
+    textInscribed.textContent = '∠ACB = ' + inscribedAngle + '°';
+    fT.textContent = inscribedAngle + '°';
+  }
+
+  arcS.addEventListener('input', draw);
+  posCS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    arcS.value = 140;
+    posCS.value = 270;
+    draw();
+  });
+  draw();
+})();
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>

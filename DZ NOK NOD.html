@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>НОК и НОД двух чисел</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --line:#e5e7eb; --a:#2563eb; --ok:#16a34a; --err:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:20px}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 20px;text-align:center}
+  h2.section{font-size:18px;margin:0 0 12px;color:var(--muted);
+             text-align:center;font-weight:600;
+             border-top:1px solid var(--line);padding-top:20px}
+  h2.section.first{border-top:none;padding-top:0}
+
+  .card{background:var(--card);border:1px solid var(--line);
+        border-radius:14px;padding:22px;margin-bottom:16px}
+
+  .progress{display:flex;justify-content:space-between;align-items:center;
+            font-size:14px;color:var(--muted);margin-bottom:10px}
+  .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;
+       margin-bottom:18px}
+  .bar > i{display:block;height:100%;background:var(--a);
+           width:0;transition:width .3s}
+
+  .task{font-size:26px;text-align:center;margin:8px 0 22px;font-weight:600}
+  .task .num{color:var(--a);font-variant-numeric:tabular-nums}
+  #gcd-gameCard .task .num{color:var(--ok);}
+
+  .answer{display:flex;flex-direction:column;gap:10px}
+  .answer input{padding:14px 16px;font-size:22px;text-align:center;
+    border:2px solid var(--line);border-radius:10px;
+    font-variant-numeric:tabular-nums;outline:none;
+    width:100%}
+  .answer input:focus{border-color:var(--a)}
+  .answer input.ok{border-color:var(--ok);background:#ecfdf3}
+  .answer input.err{border-color:var(--err);background:#fef2f2}
+  .answer button{padding:14px 22px;font-size:18px;font-weight:600;
+    border:none;border-radius:10px;background:#16a34a;color:#fff;
+    cursor:pointer;width:100%}
+  .answer button:hover{background:#15803d}
+  .answer button:disabled{opacity:.5;cursor:not-allowed;background:#16a34a}
+
+  .feedback{margin-top:14px;min-height:26px;font-size:16px;
+            text-align:center;font-weight:500}
+  .feedback.ok{color:var(--ok)}
+  .feedback.err{color:var(--err)}
+  .feedback .sol{font-weight:400;color:var(--muted);font-size:14px}
+
+  .next{margin-top:14px;text-align:center}
+  .next button{padding:10px 26px;font-size:16px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;cursor:pointer}
+  .next button:hover{background:#f3f4f6}
+
+  .final{text-align:center;padding:20px 0}
+  .final .score{font-size:44px;font-weight:700;color:var(--a)}
+  .final .sub{color:var(--muted);margin-top:6px}
+  .final button{margin-top:18px;padding:12px 28px;font-size:17px;
+    border:none;border-radius:10px;background:var(--a);color:#fff;
+    cursor:pointer;font-weight:600}
+  .final button:hover{opacity:.9}
+
+  .hidden{display:none}
+
+  /* ===== Обёртка SVG для рисования ===== */
+  .stage {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+  }
+  #board {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .wrap { max-width: 100%; }
+    h1 { font-size: 19px; }
+    h2.section { font-size: 16px; padding-top: 16px; }
+    .card { padding: 14px; border-radius: 10px; margin-bottom: 12px; }
+    .progress { font-size: 13px; }
+    .task { font-size: 20px; margin: 6px 0 16px; }
+    .answer { gap: 8px; }
+    .answer input { padding: 12px 14px; font-size: 18px; }
+    .answer button { padding: 12px 16px; font-size: 16px; }
+    .feedback { font-size: 15px; }
+    .next button { padding: 10px 20px; font-size: 15px; }
+    .final .score { font-size: 36px; }
+    .final button { padding: 11px 22px; font-size: 16px; }
+
+    #board {
+      height: 400px;
+      width: 100%;
+    }
+  }
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<div class="wrap">
+  <h1>НОК и НОД двух чисел</h1>
+
+  <!-- ==================== БЛОК 1: НОК ==================== -->
+  <h2 class="section first">Наименьшее Общее Кратное</h2>
+
+  <div class="card" id="lcm-gameCard">
+    <div class="progress">
+      <span>Задание <b id="lcm-cur">1</b> из 40</span>
+      <span>Верно: <b id="lcm-score">0</b></span>
+    </div>
+    <div class="bar"><i id="lcm-barFill"></i></div>
+
+    <div class="task">
+      НОК(<span class="num" id="lcm-na">—</span>;
+          <span class="num" id="lcm-nb">—</span>) = ?
+    </div>
+
+    <div class="answer">
+      <input id="lcm-inp" type="text" inputmode="numeric"
+             autocomplete="off" placeholder="ответ">
+      <button id="lcm-btnCheck">Проверить</button>
+    </div>
+
+    <div class="feedback" id="lcm-fb"></div>
+
+    <div class="next hidden" id="lcm-nextWrap">
+      <button id="lcm-btnNext">Дальше →</button>
+    </div>
+  </div>
+
+  <div class="card final hidden" id="lcm-finalCard">
+    <div class="score"><span id="lcm-finalScore">0</span> / 40</div>
+    <div class="sub" id="lcm-finalMsg">—</div>
+    <button id="lcm-btnRestart">Начать заново</button>
+  </div>
+
+  <!-- ==================== SVG ДЛЯ РИСОВАНИЯ ==================== -->
+  <div class="stage">
+    <div class="board-wrap">
+      <svg id="board" viewBox="0 0 640 300" width="640" height="300" preserveAspectRatio="none">
+        <rect width="640" height="300" fill="#fafafa" rx="8"/>
+      </svg>
+    <canvas id="drawCanvas" width="1280" height="600"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+    </div>
+  </div>
+
+  <!-- ==================== БЛОК 2: НОД ==================== -->
+  <h2 class="section">Наибольший Общий Делитель</h2>
+
+  <div class="card" id="gcd-gameCard">
+    <div class="progress">
+      <span>Задание <b id="gcd-cur">1</b> из 40</span>
+      <span>Верно: <b id="gcd-score">0</b></span>
+    </div>
+    <div class="bar"><i id="gcd-barFill"></i></div>
+
+    <div class="task">
+      НОД(<span class="num" id="gcd-na">—</span>;
+          <span class="num" id="gcd-nb">—</span>) = ?
+    </div>
+
+    <div class="answer">
+      <input id="gcd-inp" type="text" inputmode="numeric"
+             autocomplete="off" placeholder="ответ">
+      <button id="gcd-btnCheck">Проверить</button>
+    </div>
+
+    <div class="feedback" id="gcd-fb"></div>
+
+    <div class="next hidden" id="gcd-nextWrap">
+      <button id="gcd-btnNext">Дальше →</button>
+    </div>
+  </div>
+
+  <div class="card final hidden" id="gcd-finalCard">
+    <div class="score"><span id="gcd-finalScore">0</span> / 40</div>
+    <div class="sub" id="gcd-finalMsg">—</div>
+    <button id="gcd-btnRestart">Начать заново</button>
+  </div>
+</div>
+
+<!-- ==================== СКРИПТ 1: НОК ==================== -->
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL = 40;
+  var MIN = 3, MAX = 36;
+
+  var na = document.getElementById('lcm-na');
+  var nb = document.getElementById('lcm-nb');
+  var cur = document.getElementById('lcm-cur');
+  var scoreEl = document.getElementById('lcm-score');
+  var barFill = document.getElementById('lcm-barFill');
+  var inp = document.getElementById('lcm-inp');
+  var btnCheck = document.getElementById('lcm-btnCheck');
+  var fb = document.getElementById('lcm-fb');
+  var nextWrap = document.getElementById('lcm-nextWrap');
+  var btnNext = document.getElementById('lcm-btnNext');
+  var gameCard = document.getElementById('lcm-gameCard');
+  var finalCard = document.getElementById('lcm-finalCard');
+  var finalScore = document.getElementById('lcm-finalScore');
+  var finalMsg = document.getElementById('lcm-finalMsg');
+  var btnRestart = document.getElementById('lcm-btnRestart');
+
+  var tasks = [];
+  var idx = 0;
+  var score = 0;
+  var answered = false;
+
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+  function lcm(a, b){ return a / gcd(a, b) * b; }
+  function rnd(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function generateTasks(){
+    var seen = new Set();
+    var list = [];
+    var guard = 0;
+    while (list.length < TOTAL && guard < 20000){
+      guard++;
+      var a = rnd(MIN, MAX);
+      var b = rnd(MIN, MAX);
+      if (a === b) continue;
+      var l = lcm(a, b);
+      if (l > 100) continue;
+      var key = Math.min(a,b) + '-' + Math.max(a,b);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push({ a:a, b:b, lcm:l });
+    }
+    return list;
+  }
+
+  function renderTask(){
+    var t = tasks[idx];
+    na.textContent = t.a;
+    nb.textContent = t.b;
+    cur.textContent = idx + 1;
+
+    inp.value = '';
+    inp.className = '';
+    inp.disabled = false;
+    inp.focus();
+
+    fb.textContent = '';
+    fb.className = 'feedback';
+
+    nextWrap.classList.add('hidden');
+    btnCheck.disabled = false;
+
+    answered = false;
+    barFill.style.width = (idx / TOTAL * 100) + '%';
+  }
+
+  function check(){
+    if (answered) return;
+    var t = tasks[idx];
+    var raw = inp.value.trim();
+    if (raw === ''){ inp.focus(); return; }
+    var user = parseInt(raw, 10);
+    if (isNaN(user)){ inp.focus(); return; }
+
+    answered = true;
+    inp.disabled = true;
+    btnCheck.disabled = true;
+
+    if (user === t.lcm){
+      score++;
+      scoreEl.textContent = score;
+      inp.className = 'ok';
+      fb.className = 'feedback ok';
+      fb.innerHTML = 'Верно! НОК = ' + t.lcm + '.';
+    } else {
+      inp.className = 'err';
+      fb.className = 'feedback err';
+      fb.innerHTML = 'Неверно. Правильный ответ: <b>' + t.lcm + '</b>.' +
+        '<div class="sol">НОК = ' + t.a + ' · ' + t.b + ' </div>';
+    }
+
+    nextWrap.classList.remove('hidden');
+    btnNext.textContent = (idx === TOTAL - 1)
+      ? 'Показать результат →' : 'Дальше →';
+  }
+
+  function next(){
+    idx++;
+    if (idx >= TOTAL){ showFinal(); return; }
+    renderTask();
+  }
+
+  function showFinal(){
+    gameCard.classList.add('hidden');
+    finalCard.classList.remove('hidden');
+    finalScore.textContent = score;
+
+    var pct = Math.round(score / TOTAL * 100);
+    var msg;
+    if (pct >= 90)      msg = 'Отлично! ' + pct + '% верных.';
+    else if (pct >= 70) msg = 'Хорошо, но есть что подтянуть. ' + pct + '% верных.';
+    else if (pct >= 50) msg = 'Половина пути. Потренируйся ещё. ' + pct + '% верных.';
+    else                msg = 'Стоит повторить тему НОК. ' + pct + '% верных.';
+    finalMsg.textContent = msg;
+  }
+
+  function start(){
+    tasks = generateTasks();
+    idx = 0;
+    score = 0;
+    scoreEl.textContent = '0';
+    finalCard.classList.add('hidden');
+    gameCard.classList.remove('hidden');
+    renderTask();
+  }
+
+  btnCheck.addEventListener('click', check);
+
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      if (answered){
+        if (!nextWrap.classList.contains('hidden')) next();
+      } else {
+        check();
+      }
+    }
+  });
+
+  btnNext.addEventListener('click', next);
+  btnRestart.addEventListener('click', start);
+
+  start();
+})();
+</script>
+
+<!-- ==================== СКРИПТ 2: НОД ==================== -->
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL = 40;
+  var MIN = 3, MAX = 40;
+
+  var na = document.getElementById('gcd-na');
+  var nb = document.getElementById('gcd-nb');
+  var cur = document.getElementById('gcd-cur');
+  var scoreEl = document.getElementById('gcd-score');
+  var barFill = document.getElementById('gcd-barFill');
+  var inp = document.getElementById('gcd-inp');
+  var btnCheck = document.getElementById('gcd-btnCheck');
+  var fb = document.getElementById('gcd-fb');
+  var nextWrap = document.getElementById('gcd-nextWrap');
+  var btnNext = document.getElementById('gcd-btnNext');
+  var gameCard = document.getElementById('gcd-gameCard');
+  var finalCard = document.getElementById('gcd-finalCard');
+  var finalScore = document.getElementById('gcd-finalScore');
+  var finalMsg = document.getElementById('gcd-finalMsg');
+  var btnRestart = document.getElementById('gcd-btnRestart');
+
+  var tasks = [];
+  var idx = 0;
+  var score = 0;
+  var answered = false;
+
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+  function rnd(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function generateTasks(){
+    var seen = new Set();
+    var list = [];
+    var guard = 0;
+    var count2 = 0;
+    var count3 = 0;
+    var LIMIT2 = 5;
+    var LIMIT3 = 7;
+    while (list.length < TOTAL && guard < 40000){
+      guard++;
+      var a = rnd(MIN, MAX);
+      var b = rnd(MIN, MAX);
+      if (a === b) continue;
+      var g = gcd(a, b);
+      if (g === 1) continue;
+      if (g === 2 && count2 >= LIMIT2) continue;
+      if (g === 3 && count3 >= LIMIT3) continue;
+      var key = Math.min(a,b) + '-' + Math.max(a,b);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (g === 2) count2++;
+      if (g === 3) count3++;
+      list.push({ a:a, b:b, g:g });
+    }
+    return list;
+  }
+
+  function shuffleNoTriples(list){
+    var byG = {};
+    list.forEach(function(t){
+      (byG[t.g] = byG[t.g] || []).push(t);
+    });
+    var groups = Object.keys(byG).map(function(k){ return byG[k]; });
+
+    var result = [];
+    while (groups.length){
+      groups.sort(function(x, y){ return y.length - x.length; });
+
+      var g = groups[0];
+      var last = result[result.length - 1];
+      var prev = result[result.length - 2];
+
+      if (g.length && last && prev &&
+          last.g === g[0].g && prev.g === g[0].g){
+        if (groups.length < 2) break;
+        var tmp = groups[0];
+        groups[0] = groups[1];
+        groups[1] = tmp;
+        g = groups[0];
+      }
+
+      result.push(g.shift());
+      if (g.length === 0) groups.shift();
+    }
+    return result;
+  }
+
+  function renderTask(){
+    var t = tasks[idx];
+    na.textContent = t.a;
+    nb.textContent = t.b;
+    cur.textContent = idx + 1;
+
+    inp.value = '';
+    inp.className = '';
+    inp.disabled = false;
+    inp.focus();
+
+    fb.textContent = '';
+    fb.className = 'feedback';
+
+    nextWrap.classList.add('hidden');
+    btnCheck.disabled = false;
+
+    answered = false;
+    barFill.style.width = (idx / TOTAL * 100) + '%';
+  }
+
+  function check(){
+    if (answered) return;
+    var t = tasks[idx];
+    var raw = inp.value.trim();
+    if (raw === ''){ inp.focus(); return; }
+    var user = parseInt(raw, 10);
+    if (isNaN(user)){ inp.focus(); return; }
+
+    answered = true;
+    inp.disabled = true;
+    btnCheck.disabled = true;
+
+    if (user === t.g){
+      score++;
+      scoreEl.textContent = score;
+      inp.className = 'ok';
+      fb.className = 'feedback ok';
+      fb.innerHTML = 'Верно! НОД = ' + t.g + '.';
+    } else {
+      inp.className = 'err';
+      fb.className = 'feedback err';
+      fb.innerHTML = 'Неверно. Правильный ответ: <b>' + t.g + '</b>.' +
+        '<div class="sol">' +
+        t.a + ' = ' + factorString(t.a) + '<br>' +
+        t.b + ' = ' + factorString(t.b) + '<br>' +
+        'НОД = ' + factorString(t.g) + ' = ' + t.g +
+        '</div>';
+    }
+
+    nextWrap.classList.remove('hidden');
+    btnNext.textContent = (idx === TOTAL - 1)
+      ? 'Показать результат →' : 'Дальше →';
+  }
+
+  function factorString(n){
+    var parts = [];
+    var x = n;
+    var d = 2;
+    while (d * d <= x){
+      while (x % d === 0){ parts.push(d); x /= d; }
+      d++;
+    }
+    if (x > 1) parts.push(x);
+    if (parts.length === 0) return String(n);
+    return parts.join(' · ');
+  }
+
+  function next(){
+    idx++;
+    if (idx >= TOTAL){ showFinal(); return; }
+    renderTask();
+  }
+
+  function showFinal(){
+    gameCard.classList.add('hidden');
+    finalCard.classList.remove('hidden');
+    finalScore.textContent = score;
+
+    var pct = Math.round(score / TOTAL * 100);
+    var msg;
+    if (pct >= 90)      msg = 'Отлично! ' + pct + '% верных.';
+    else if (pct >= 70) msg = 'Хорошо, но есть что подтянуть. ' + pct + '% верных.';
+    else if (pct >= 50) msg = 'Половина пути. Потренируйся ещё. ' + pct + '% верных.';
+    else                msg = 'Стоит повторить тему НОД. ' + pct + '% верных.';
+    finalMsg.textContent = msg;
+  }
+
+  function start(){
+    tasks = shuffleNoTriples(generateTasks());
+    idx = 0;
+    score = 0;
+    scoreEl.textContent = '0';
+    finalCard.classList.add('hidden');
+    gameCard.classList.remove('hidden');
+    renderTask();
+  }
+
+  btnCheck.addEventListener('click', check);
+
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      if (answered){
+        if (!nextWrap.classList.contains('hidden')) next();
+      } else {
+        check();
+      }
+    }
+  });
+
+  btnNext.addEventListener('click', next);
+  btnRestart.addEventListener('click', start);
+
+  start();
+})();
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заголовок страницы</title>
+
+<!-- 1. Стили модуля рисования — ПЕРВЫМИ -->
+<link rel="stylesheet" href="drawing/drawing-block.css">
+
+<style>
+  /* ===== Стили СТРАНИЦЫ ===== */
+  body { font-family: Arial, sans-serif; background: #ecf0f1; padding: 20px; margin: 0; }
+  .box { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  h2 { color: #1a237e; margin: 0 0 5px 0; }
+  p.desc { color: #666; font-size: 13px; margin: 0 0 15px 0; }
+
+  /* ===== Контролы ===== */
+  .controls { display: flex; gap: 12px; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+  .ctrl { display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px; }
+  .ctrl label { white-space: nowrap; }
+  label { font-weight: 600; font-size: 14px; }
+  input[type="range"] { flex: 1; min-width: 120px; accent-color: #d32f2f; }
+  .value { font-weight: bold; color: #d32f2f; min-width: 50px; display: inline-block; font-size: 15px; }
+  button { padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  button:hover { background: #424242; }
+  button.preset { background: #1565c0; }
+  button.preset:hover { background: #0d47a1; }
+
+  /* ===== ОБЁРТКА SVG — обязательно position: relative ===== */
+  .stage {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ===== Формулы / подсказки ===== */
+  .formula { background: #f5f5f5; border-left: 4px solid #d32f2f; padding: 12px; margin-top: 12px; font-size: 18px; text-align: center; border-radius: 4px; }
+  .formula strong { color: #d32f2f; }
+  .info { text-align: center; font-size: 14px; margin-top: 8px; color: #555; }
+  .hint { background: #fff8e1; border-left: 4px solid #ffa000; padding: 10px 16px; margin-top: 12px; border-radius: 4px; font-size: 13px; color: #5d4037; line-height: 1.5; }
+  .hint b { color: #d32f2f; }
+
+  /* ===== Кнопка «Назад» ===== */
+  .back-btn {
+    position: fixed; bottom: 15px; right: 15px; width: 44px; height: 44px;
+    background: #0066cc; color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-size: 20px; z-index: 999;
+  }
+  .back-btn:hover { background: #0052a3; }
+
+  /* ===== Мобильная адаптация ===== */
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .box { padding: 14px; border-radius: 8px; }
+    h2 { font-size: 19px; }
+    .controls { gap: 8px; padding: 10px; }
+    .ctrl { flex: 1 1 100%; min-width: 0; }
+    input[type="range"] { min-width: 100%; }
+    .value { font-size: 17px; }
+    button { font-size: 15px; padding: 10px 16px; }
+  }
+</style>
+
+<!-- 3. Стили меню -->
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+
+<div class="box">
+  <h2>Заголовок интерактива</h2>
+  <p class="desc">Короткое описание, что показывает интерактив.</p>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label>a =</label>
+      <input type="range" id="a" min="-2" max="2" step="0.1" value="1">
+      <span class="value" id="av">1.0</span>
+    </div>
+    <div class="ctrl">
+      <label>b =</label>
+      <input type="range" id="b" min="-5" max="5" step="0.1" value="0">
+      <span class="value" id="bv">0.0</span>
+    </div>
+    <button id="reset">Сброс</button>
+  </div>
+
+  <!-- ГЛАВНЫЙ SVG — внутри .stage -->
+  <div class="stage">
+    <svg id="board" viewBox="0 0 600 500" width="600">
+      <rect width="600" height="500" fill="#fafafa" rx="8"/>
+
+      <!-- Сетка -->
+      <g stroke="#e0e0e0" stroke-width="1">
+        <line x1="100" y1="20" x2="100" y2="480"/>
+        <line x1="200" y1="20" x2="200" y2="480"/>
+        <line x1="300" y1="20" x2="300" y2="480"/>
+        <line x1="400" y1="20" x2="400" y2="480"/>
+        <line x1="500" y1="20" x2="500" y2="480"/>
+        <line x1="20" y1="100" x2="580" y2="100"/>
+        <line x1="20" y1="200" x2="580" y2="200"/>
+        <line x1="20" y1="300" x2="580" y2="300"/>
+        <line x1="20" y1="400" x2="580" y2="400"/>
+      </g>
+
+      <!-- Оси -->
+      <line x1="20" y1="250" x2="585" y2="250" stroke="#333" stroke-width="2"/>
+      <line x1="300" y1="20" x2="300" y2="485" stroke="#333" stroke-width="2"/>
+      <polygon points="585,245 595,250 585,255" fill="#333"/>
+      <polygon points="295,20 300,10 305,20" fill="#333"/>
+      <text x="565" y="275" font-family="Arial" font-size="18" fill="#333" font-weight="bold">x</text>
+      <text x="310" y="30" font-family="Arial" font-size="18" fill="#333" font-weight="bold">y</text>
+
+      <!-- Здесь ваш чертёж -->
+      <path id="curve" fill="none" stroke="#d32f2f" stroke-width="4"/>
+    </svg>
+  </div>
+
+  <div class="formula">y = <strong id="f">1.0</strong>x</div>
+  <div class="info" id="info">Стандартный график</div>
+
+  <div class="hint">
+    💡 Подсказка 1.<br>
+    💡 Подсказка 2.<br>
+    💡 Подсказка 3.
+  </div>
+</div>
+
+<!-- ===== Логика SVG (своя для каждой страницы) ===== -->
+<script>
+(function() {
+  "use strict";
+  var aS = document.getElementById('a');
+  var bS = document.getElementById('b');
+  var av = document.getElementById('av');
+  var bv = document.getElementById('bv');
+  var fT = document.getElementById('f');
+  var curve = document.getElementById('curve');
+  var info = document.getElementById('info');
+  var resetBtn = document.getElementById('reset');
+
+  function draw() {
+    var a = parseFloat(aS.value);
+    var b = parseFloat(bS.value);
+    av.textContent = a.toFixed(1);
+    bv.textContent = b.toFixed(1);
+    fT.textContent = a.toFixed(1);
+
+    // Пример: y = a*x + b (прямая)
+    var pts = [];
+    for (var x = -3; x <= 3; x += 0.1) {
+      var y = a * x + b;
+      var cx = 300 + 100 * x;
+      var cy = 250 - 100 * y;
+      pts.push(cx.toFixed(1) + ',' + cy.toFixed(1));
+    }
+    curve.setAttribute('d', 'M ' + pts.join(' L '));
+
+    info.textContent = 'y = ' + a.toFixed(1) + 'x + ' + b.toFixed(1);
+  }
+
+  aS.addEventListener('input', draw);
+  bS.addEventListener('input', draw);
+  resetBtn.addEventListener('click', function() {
+    aS.value = 1;
+    bS.value = 0;
+    draw();
+  });
+  draw();
+})();
+</script>
+
+<!-- 2. Меню -->
+<script src="menu.js"></script>
+<!-- 3. Модуль рисования — ПОСЛЕДНИМ -->
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>

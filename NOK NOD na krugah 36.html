@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дроби на кругах</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --line:#e5e7eb; --a:#16a34a; --b:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:16px}
+  h1{font-size:20px;margin:0 0 12px}
+  .wrap{max-width:1040px;margin:0 auto;display:grid;
+        grid-template-columns:1fr 340px;gap:16px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .stage{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:8px}
+  svg{display:block;width:100%;height:auto}
+  .panel{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:14px}
+  .group{margin-bottom:18px;padding-bottom:14px;
+         border-bottom:1px solid var(--line)}
+  .group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .group h2{font-size:15px;margin:0 0 10px;font-weight:600}
+  .group.a h2{color:var(--a)}
+  .group.b h2{color:var(--b)}
+  .row{margin-bottom:10px}
+  .row label{display:flex;justify-content:space-between;font-size:14px;
+             color:var(--muted);margin-bottom:4px}
+  .row b{color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%}
+  .group.a input{accent-color:var(--a)}
+  .group.b input{accent-color:var(--b)}
+  .vals{border-top:1px solid var(--line);padding-top:10px;font-size:15px;
+        font-variant-numeric:tabular-nums}
+  .vals div{display:flex;justify-content:space-between;padding:4px 0}
+  .vals .k{color:var(--muted)}
+  .hint{margin-top:10px;padding:8px 10px;border-radius:8px;
+        background:#f5f3ff;font-size:14px;color:var(--ink)}
+  .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<h1>Дроби на кругах</h1>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="board-wrap">
+<svg id="board" viewBox="0 0 680 460" aria-label="Два круга с долями"></svg>
+    <canvas id="drawCanvas" width="1360" height="920"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="group a">
+      <h2>Круг 1</h2>
+      <div class="row">
+        <label>Числитель <b id="lma">1</b></label>
+        <input id="rma" type="range" min="0" max="12" step="1" value="1">
+      </div>
+      <div class="row">
+        <label>Знаменатель <b id="la">3</b></label>
+        <input id="ra" type="range" min="1" max="12" step="1" value="3">
+      </div>
+    </div>
+
+    <div class="group b">
+      <h2>Круг 2</h2>
+      <div class="row">
+        <label>Числитель <b id="lmb">1</b></label>
+        <input id="rmb" type="range" min="0" max="36" step="1" value="1">
+      </div>
+      <div class="row">
+        <label>Знаменатель <b id="lb">4</b></label>
+        <input id="rb" type="range" min="1" max="36" step="1" value="4">
+      </div>
+    </div>
+
+    <div class="vals">
+      <div><span class="k">Круг 1</span><b id="v1">—</b></div>
+      <div><span class="k">Круг 2</span><b id="v2">—</b></div>
+      <!-- +++ НОВОЕ: строки для НОД и НОК -->
+      <div><span class="k">НОД (a, b)</span><b id="vgcd">—</b></div>
+      <div><span class="k">НОК (a, b)</span><b id="vlcm">—</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var svg = document.getElementById('board');
+  var rma = document.getElementById('rma');
+  var ra  = document.getElementById('ra');
+  var rmb = document.getElementById('rmb');
+  var rb  = document.getElementById('rb');
+  var lma = document.getElementById('lma');
+  var la  = document.getElementById('la');
+  var lmb = document.getElementById('lmb');
+  var lb  = document.getElementById('lb');
+  var v1  = document.getElementById('v1');
+  var v2  = document.getElementById('v2');
+  // +++ НОВОЕ: ссылки на элементы НОД и НОК
+  var vgcd = document.getElementById('vgcd');
+  var vlcm = document.getElementById('vlcm');
+
+  var W = 680, H = 460;
+  var R  = 140;
+  var CX1 = W/2 - 165, CX2 = W/2 + 165, CY = 180;
+
+  function el(name, attrs){
+    var n = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clear(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  // +++ НОВОЕ: НОД двух чисел (алгоритм Евклида)
+  function gcd(a, b){ while (b){ var t = a % b; a = b; b = t; } return a; }
+
+  // сектор круга №i из n (0 — сверху, по часовой)
+  function sectorPath(cx, cy, r, i, n){
+    var step = 2*Math.PI / n;
+    var a1 = -Math.PI/2 + i*step;
+    var a2 = a1 + step;
+    var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    var x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
+    var large = (a2 - a1) > Math.PI ? 1 : 0;
+    return 'M ' + cx + ' ' + cy +
+           ' L ' + x1 + ' ' + y1 +
+           ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 + ' Z';
+  }
+
+  // дробь с горизонтальной чертой, центрированная в (x, y)
+  function drawFraction(g, x, y, num, den, color, size){
+    size = size || 26;
+    var gap = size * 0.16;
+    var halfLine = size * 0.45;
+
+    var t1 = el('text', {
+      x:x, y:y - gap, 'text-anchor':'middle',
+      'font-size':size, 'font-weight':700, fill:color
+    });
+    t1.textContent = num;
+    g.appendChild(t1);
+
+    g.appendChild(el('line', {
+      x1:x - halfLine, y1:y, x2:x + halfLine, y2:y,
+      stroke: color, 'stroke-width':2.5, 'stroke-linecap':'round'
+    }));
+
+    var t2 = el('text', {
+      x:x, y:y + gap + size*0.8, 'text-anchor':'middle',
+      'font-size':size, 'font-weight':700, fill:color
+    });
+    t2.textContent = den;
+    g.appendChild(t2);
+  }
+
+  // один круг: разрез на den частей, закрашено num долей
+  function drawCircle(cx, cy, num, den, color, fillRGBA){
+    for (var i = 0; i < den; i++){
+      var filled = i < num;
+      svg.appendChild(el('path', {
+        d: sectorPath(cx, cy, R, i, den),
+        fill: filled ? fillRGBA : '#fff',
+        stroke: '#cbd5e1', 'stroke-width':1
+      }));
+    }
+    svg.appendChild(el('circle', {
+      cx:cx, cy:cy, r:R, fill:'none',
+      stroke:'var(--ink)', 'stroke-width':2
+    }));
+    drawFraction(svg, cx, cy + R + 48, num, den, color, 26);
+  }
+
+  function draw(){
+    var ma = +rma.value, da = +ra.value;
+    var mb = +rmb.value, db = +rb.value;
+
+    if (ma > da){ ma = da; rma.value = da; }
+    if (mb > db){ mb = db; rmb.value = db; }
+
+    rma.max = da;
+    rmb.max = db;
+
+    lma.textContent = ma;
+    la.textContent  = da;
+    lmb.textContent = mb;
+    lb.textContent  = db;
+
+    clear();
+
+    drawCircle(CX1, CY, ma, da, 'var(--a)', 'rgba(22,163,74,.35)');
+    drawCircle(CX2, CY, mb, db, 'var(--b)', 'rgba(37,99,235,.35)');
+
+    // панель
+    v1.textContent = ma + ' / ' + da;
+    v2.textContent = mb + ' / ' + db;
+
+    // +++ НОВОЕ: НОД и НОК знаменателей
+    var g = gcd(da, db);
+    var l = da / g * db;
+    vgcd.textContent = g;
+    vlcm.textContent = l;
+  }
+
+  [rma, ra, rmb, rb].forEach(function(s){
+    s.addEventListener('input', draw);
+  });
+  draw();
+})();
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>

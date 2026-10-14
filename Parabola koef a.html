@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Парабола: коэффициент a</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f0f0; margin: 0; padding: 20px; }
+  .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  h1 { text-align: center; color: #333; font-size: 22px; }
+  .buttons { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+  button {
+    padding: 12px 24px; font-size: 16px; font-weight: bold;
+    border: none; border-radius: 8px; cursor: pointer;
+    background: #1565c0; color: white; transition: all 0.2s;
+  }
+  button:hover { background: #0d47a1; transform: translateY(-2px); }
+  button.active { background: #d32f2f; }
+  .info { text-align: center; font-size: 20px; color: #333; margin-top: 10px; }
+  .info span { font-weight: bold; color: #d32f2f; }
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<div class="container">
+  <h1>Как коэффициент <em>a</em> влияет на параболу y = ax²</h1>
+
+  <div class="buttons">
+    <button onclick="setA(0.3, this)">a = 0.3</button>
+    <button onclick="setA(1, this)">a = 1</button>
+    <button onclick="setA(2, this)">a = 2</button>
+    <button onclick="animateA(this)">▶ Анимация</button>
+  </div>
+
+  <div class="board-wrap">
+<svg id="graph" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%">
+    <rect width="600" height="600" fill="#ffffff" rx="10"/>
+
+    <!-- Сетка -->
+    <g stroke="#e0e0e0" stroke-width="1">
+      <line x1="100" y1="50" x2="100" y2="550"/>
+      <line x1="200" y1="50" x2="200" y2="550"/>
+      <line x1="300" y1="50" x2="300" y2="550"/>
+      <line x1="400" y1="50" x2="400" y2="550"/>
+      <line x1="500" y1="50" x2="500" y2="550"/>
+      <line x1="50" y1="100" x2="550" y2="100"/>
+      <line x1="50" y1="200" x2="550" y2="200"/>
+      <line x1="50" y1="300" x2="550" y2="300"/>
+      <line x1="50" y1="400" x2="550" y2="400"/>
+      <line x1="50" y1="500" x2="550" y2="500"/>
+    </g>
+
+    <!-- Оси -->
+    <line x1="50" y1="500" x2="570" y2="500" stroke="#333" stroke-width="3"/>
+    <line x1="300" y1="30" x2="300" y2="550" stroke="#333" stroke-width="3"/>
+    <polygon points="570,495 580,500 570,505" fill="#333"/>
+    <polygon points="295,30 300,20 305,30" fill="#333"/>
+    <text x="555" y="525" font-family="Arial" font-size="20" fill="#333" font-weight="bold">x</text>
+    <text x="310" y="40" font-family="Arial" font-size="20" fill="#333" font-weight="bold">y</text>
+
+    <!-- Деления -->
+    <g font-family="Arial" font-size="14" fill="#666" text-anchor="middle">
+      <text x="200" y="520">-1</text>
+      <text x="400" y="520">1</text>
+      <text x="500" y="520">2</text>
+      <text x="285" y="400">1</text>
+      <text x="285" y="300">2</text>
+      <text x="285" y="200">3</text>
+      <text x="285" y="100">4</text>
+    </g>
+
+    <!-- Парабола -->
+    <path id="parabola" d="M 80,354 Q 300,313 520,354" fill="none" stroke="#d32f2f" stroke-width="4"/>
+
+    <!-- Вершина -->
+    <circle cx="300" cy="500" r="6" fill="#1565c0"/>
+    <text x="310" y="495" font-family="Arial" font-size="16" fill="#1565c0">(0;0)</text>
+
+    <!-- Формула -->
+    <text id="formula" x="150" y="50" font-family="Arial" font-size="28" font-weight="bold" fill="#d32f2f">
+      y = 0.3x²
+    </text>
+  </svg>
+    <canvas id="drawCanvas" width="1200" height="1200"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+    </div>
+
+  <div class="info">Коэффициент <span id="aValue">a = 0.3</span></div>
+</div>
+
+<script>
+  const parabola = document.getElementById('parabola');
+  const formula = document.getElementById('formula');
+  const aValue = document.getElementById('aValue');
+  let animId = null;
+
+  // Функция: строит путь для заданного a
+  // cx = 300 + 100x, cy = 500 - 100*a*x²
+  // Ограничим x так, чтобы cy >= 50 (не выходил за пределы)
+  function buildPath(a) {
+    // Находим максимальный x, при котором y = a*x² <= 4.5 (чтобы cy >= 50)
+    // И ограничим x <= 2.5
+    let xMax = Math.min(2.5, Math.sqrt(4.5 / a));
+    // Точки для квадратичной кривой: используем Q (одна контрольная точка)
+    // Парабола симметрична, вершина в (300,500)
+    // Левая точка: x = -xMax, cx = 300 - 100*xMax, cy = 500 - 100*a*xMax²
+    // Правая точка: x = +xMax
+    // Контрольная точка — вершина: (300, 500) — но для Q нужна точка, дающая форму параболы
+    // Используем аппроксимацию: Q control = (300, 500 - 100*a*xMax² * 2) — нет, это не точно.
+    // Лучше: используем кубическую кривую или несколько точек.
+
+    // Проще: построим путь из 21 точки
+    let points = [];
+    for (let i = -10; i <= 10; i++) {
+      let x = xMax * i / 10;
+      let y = a * x * x;
+      let cx = 300 + 100 * x;
+      let cy = 500 - 100 * y;
+      points.push(`${cx.toFixed(1)},${cy.toFixed(1)}`);
+    }
+    return 'M ' + points.join(' L ');
+  }
+
+  function setA(a, btn) {
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    document.querySelectorAll('.buttons button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    parabola.setAttribute('d', buildPath(a));
+    formula.textContent = `y = ${a}x²`;
+    aValue.textContent = `a = ${a}`;
+  }
+
+  function animateA(btn) {
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    document.querySelectorAll('.buttons button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    let start = performance.now();
+    let duration = 4000; // 4 секунды на полный цикл
+
+    function frame(now) {
+      let t = (now - start) / duration;
+      // a меняется от 0.3 до 2 и обратно (плавно)
+      let a = 0.3 + (2 - 0.3) * (1 - Math.cos(t * 2 * Math.PI)) / 2;
+      parabola.setAttribute('d', buildPath(a));
+      formula.textContent = `y = ${a.toFixed(2)}x²`;
+      aValue.textContent = `a = ${a.toFixed(2)}`;
+      animId = requestAnimationFrame(frame);
+    }
+    animId = requestAnimationFrame(frame);
+  }
+
+  // Инициализация
+  setA(0.3);
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>

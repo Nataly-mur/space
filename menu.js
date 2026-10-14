@@ -7,11 +7,11 @@
     '<button class="burger-btn" id="burgerBtn" aria-label="Меню">&#9776;</button>' +
     '<div class="burger-overlay" id="burgerOverlay"></div>' +
     '<nav class="burger-panel" id="burgerPanel" aria-label="Навигация">' +
-            '<div class="burger-header">' +
-        '<a href="index.html" class="burger-home">Меню</a>' +
+      '<div class="burger-header">' +
+        '<span>Меню</span>' +
         '<button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>' +
       '</div>' +
-    
+
       '<div class="burger-group" data-group="math">' +
         '<div class="burger-group-title">Математика</div>' +
         '<div class="burger-group-list">' +
@@ -41,7 +41,6 @@
           '<a href="Vpisanny ugol.html">Вписанный угол</a>' +
           '<a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>' +
           '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
-          '<a href="okruzhnost hordy.html">Окружность. Вписаный треугольник, хорды </a>' +
           '<a href="Teorema cosinusov.html">Теорема косинусов</a>' +
         '</div>' +
       '</div>' +

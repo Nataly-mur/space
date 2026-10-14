@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ОГЭ Тренажёр</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+:root{--teal:#3A626D;--beige:#D7C8AB;--navy:#244167;--gold:#C08A2F;--burg:#8A282F;}
+body{margin:0;padding:20px;background:#f5f3ee;font-family:Arial,sans-serif}
+.app{max-width:1100px;margin:auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.header{background:var(--navy);color:#fff;padding:20px;text-align:center;font-size:32px;font-weight:bold}
+.row{padding:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{background:var(--gold);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+#btnAnswer{background:#16a34a}
+#btnAnswer:hover{background:#15803d}
+#btnAnswer:disabled{background:#16a34a}
+input,select{padding:10px;border:1px solid #ccc;border-radius:8px}
+.mode.active{background:var(--teal)}
+.power-exp{
+    font-size:0.45em;
+    position:relative;
+    top:-1em;
+    margin-left:1px;
+}
+.root{
+    display:inline-flex;
+    align-items:flex-start;
+    color:#244167;
+    font-weight:bold;
+}
+
+.root-sign{
+    font-size:1em;
+    line-height:1;
+}
+
+.root-value{
+    border-top:3px solid #244167;
+    padding:2px 6px 0 6px;
+    margin-left:-4px;
+}
+#task{padding:30px;font-size:34px;min-height:100px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--navy)}
+.fraction{display:inline-flex;flex-direction:column;align-items:center;min-width:55px}
+.num{font-size:32px;color:var(--burg);font-weight:bold}
+.den{font-size:32px;color:var(--teal);font-weight:bold}
+.bar{width:100%;border-top:3px solid var(--navy);margin:3px 0}
+#result{padding:0 30px 20px;font-size:24px;font-weight:bold}
+.stats{padding:15px;background:#faf8f4;display:flex;gap:25px;flex-wrap:wrap;font-weight:bold;color:var(--navy)}
+.stats .reached{color:var(--gold);transition:color .3s}
+
+/* ===== Обёртка SVG для рисования ===== */
+.stage {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0;
+  padding: 0 15px;
+}
+#board {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+}
+
+.back-btn {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  width: 44px;
+  height: 44px;
+  background: #0066cc;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 20px;
+  z-index: 999;
+}
+.back-btn:hover { background: #0052a3; }
+
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  .app { border-radius: 14px; }
+  .header { font-size: 22px; padding: 14px; }
+  .row { padding: 10px; gap: 8px; }
+  button { font-size: 14px; padding: 9px 14px; }
+  #task { padding: 20px 15px; font-size: 26px; }
+  #result { padding: 0 15px 16px; font-size: 20px; }
+  .stats { padding: 12px; gap: 16px; font-size: 14px; }
+
+  #board {
+    height: 400px;
+    width: 100%;
+  }
+}
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<div class="app">
+<div class="header">Подготовка к ОГЭ по математике</div>
+
+<div class="row">
+<button onclick="resetStats()">
+Сбросить статистику
+</button>
+</div>
+
+<div class="row">
+<button class="mode" onclick="setMode(6,this)">ОГЭ №6 Дроби</button>
+<button class="mode" onclick="setMode(7,this)">ОГЭ №7 Степени</button>
+<button class="mode" onclick="setMode(8,this)">ОГЭ №8 Выражения</button>
+<span id="modeTitle"></span>
+</div>
+
+<div id="task"></div>
+
+<div class="row">
+<input id="answer" placeholder="Ответ">
+<button id="btnAnswer" onclick="checkAnswer()">Ответить</button>
+<button onclick="generateExample()">Новое задание</button>
+</div>
+
+<div id="result"></div>
+
+<!-- ==================== SVG ДЛЯ РИСОВАНИЯ ==================== -->
+<div class="stage">
+  <div class="board-wrap">
+    <svg id="board" viewBox="0 0 1000 400" width="1000" height="400" preserveAspectRatio="none">
+      <rect width="1000" height="400" fill="#fafafa" rx="8"/>
+    </svg>
+    <canvas id="drawCanvas" width="2000" height="800"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+
+<div>
+<h3>Дроби</h3>
+Всего: <span id="fTotal">0</span><br>
+Верно: <span id="fCorrect">0</span>
+</div>
+
+<div>
+<h3>Степени</h3>
+Всего: <span id="pTotal">0</span><br>
+Верно: <span id="pCorrect">0</span>
+</div>
+
+<div>
+<h3>Выражения</h3>
+Всего: <span id="eTotal">0</span><br>
+Верно: <span id="eCorrect">0</span>
+</div>
+
+<div>
+<h3>Общая</h3>
+Всего: <span id="allTotal">0</span><br>
+Верно: <span id="allCorrect">0</span><br>
+Процент: <span id="allPercent">0%</span>
+</div>
+
+<div>
+<h3>Время</h3>
+<span id="timer">00:00</span>
+</div>
+
+</div>
+</div>
+
+<script>
+let currentMode=6,correctAnswer="";
+let stats = {
+    
+
+fractions:{
+total:0,
+correct:0
+},
+
+powers:{
+total:0,
+correct:0
+},
+
+expressions:{
+total:0,
+correct:0
+}
+
+};
+function updateStats(){
+fTotal.textContent =
+stats.fractions.total;
+
+fCorrect.textContent =
+stats.fractions.correct;
+
+pTotal.textContent =
+stats.powers.total;
+
+pCorrect.textContent =
+stats.powers.correct;
+
+eTotal.textContent =
+stats.expressions.total;
+
+eCorrect.textContent =
+stats.expressions.correct;
+
+const total =
+stats.fractions.total +
+stats.powers.total +
+stats.expressions.total;
+
+const correct =
+stats.fractions.correct +
+stats.powers.correct +
+stats.expressions.correct;
+
+allTotal.textContent = total;
+allCorrect.textContent = correct;
+
+allPercent.textContent =
+total
+? Math.round(correct*100/total)+"%"
+: "0%";
+
+// +++ подсветка отдельных счётчиков при 15 верных
+fCorrect.classList.toggle('reached', stats.fractions.correct >= 15);
+pCorrect.classList.toggle('reached', stats.powers.correct >= 15);
+eCorrect.classList.toggle('reached', stats.expressions.correct >= 15);
+
+
+}
+
+function gcd(a,b){while(b){[a,b]=[b,a%b]} return Math.abs(a)}
+function simplify(n,d){let g=gcd(n,d); return {n:n/g,d:d/g};}
+// +++ нормализация ответа: "n/1" и "n" считаем одинаковыми
+function normalize(s){
+  s = String(s).trim().replace(/\s+/g,'');   // убираем пробелы
+  if (s === '') return s;
+  var m = s.match(/^(-?\d+)\/(\d+)$/);
+  if (m){
+    var num = parseInt(m[1], 10);
+    var den = parseInt(m[2], 10);
+    if (den === 1) return String(num);       // 3/1 → 3
+    return num + '/' + den;                  // остальные оставляем
+  }
+  return s;                                  // "3" остаётся "3"
+}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function frac(n,d){return `<span class="fraction"><span class="num">${n}</span><span class="bar"></span><span class="den">${d}</span></span>`;}
+
+function setMode(m,btn){
+ currentMode=m;
+ document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
+ if(btn) btn.classList.add('active');
+ document.getElementById('modeTitle').textContent="Текущий режим: ОГЭ №"+m;
+ generateExample();
+}
+
+function generateFractions(){
+ const ops=["+","-","×","÷"]; const op=ops[Math.floor(Math.random()*4)];
+ let a=rnd(1,9),b=rnd(2,9),c=rnd(1,9),d=rnd(2,9),num,den;
+ if(op==="+"){num=a*d+c*b;den=b*d;}
+ if(op==="−"||op=="-"){num=a*d-c*b;den=b*d;if(num<=0)return generateFractions();}
+ if(op==="×"){num=a*c;den=b*d;}
+ if(op==="÷"){num=a*d;den=b*c;}
+ let r=simplify(num,den); correctAnswer=r.n+"/"+r.d;
+ task.innerHTML=frac(a,b)+op+frac(c,d)+" = ?";
+}
+
+function generatePowers(){
+
+    const type = rnd(0,9);
+
+    let a,b,n,x;
+
+    switch(type){
+
+        // 0. Простая степень
+        case 0:
+
+            a = rnd(2,9);
+            n = rnd(2,4);
+
+            correctAnswer = String(a**n);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">${n}</span> = ?`;
+
+            break;
+
+        // 1. Квадратный корень
+        case 1:
+
+            const squares =
+                [4,9,16,25,36,49,64,81,100];
+
+            a =
+                squares[
+                    rnd(0,squares.length-1)
+                ];
+
+            correctAnswer =
+                String(Math.sqrt(a));
+
+            task.innerHTML =
+             `
+             <span class="root">
+             <span class="root-sign">√</span>
+             <span class="root-value">${a}</span>
+             </span>
+             = ?
+             `;
+
+            break;
+
+        // 2. Куб числа
+        case 2:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a*a*a);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">3</span> = ?`;
+
+            break;
+
+        // 3. Корень из квадрата
+        case 3:
+
+            x = rnd(2,12);
+
+            correctAnswer =
+                String(x);
+
+            task.innerHTML =
+`
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">
+        ${x}<span class="power-exp">2</span>
+    </span>
+</span>
+= ?
+`;
+
+            break;
+
+        // 4. Отрицательная степень
+        case 4:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                `1/${a*a}`;
+
+            task.innerHTML =
+                `${a}<span class="power-exp">-2</span> = ?`;
+
+            break;
+
+        // 5. Произведение степеней
+        case 5:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a**5);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">2</span> · ${a}<span class="power-exp">3</span> = ?`;
+
+            break;
+
+        // 6. Деление степеней
+        case 6:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a**2);
+
+            task.innerHTML =
+                `${a}<span class="power-exp">4</span> : ${a}<span class="power-exp">2</span> = ?`;
+
+            break;
+
+        // 7. Степень степени
+        case 7:
+
+            a = rnd(2,4);
+
+            correctAnswer =
+                String((a*a)*(a*a));
+
+            task.innerHTML =
+                `(${a}<span class="power-exp">2</span>)<span class="power-exp">2</span> = ?`;
+
+            break;
+
+        // 8. Корень произведения
+        case 8:
+
+            a = rnd(2,9);
+
+            b = rnd(2,9);
+
+            correctAnswer =
+                String(a*b);
+            task.innerHTML =
+`
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">
+        ${a*a}·${b*b}
+    </span>
+</span>
+= ?
+`;
+            
+
+            break;
+
+                // 9. Смешанное выражение
+        case 9:
+
+            a = rnd(2,5);
+
+            correctAnswer =
+                String(a*a + 4);
+
+            task.innerHTML =
+`
+${a}<span class="power-exp">2</span> +
+<span class="root">
+    <span class="root-sign">√</span>
+    <span class="root-value">16</span>
+</span>
+= ?
+`;
+
+
+            break;
+    }
+}
+
+function generateExpressions(){
+ let a=rnd(1,20), b=rnd(1,20);
+ correctAnswer=String(2*a+3*b);
+ task.innerHTML=`2·${a} + 3·${b} = ?`;
+}
+
+function generateExample(){
+ answer.value=""; result.textContent="";
+ // +++ разблокируем кнопку для нового примера
+ var btn = document.querySelector('button[onclick="checkAnswer()"]');
+ if(btn) btn.disabled = false;
+ if(currentMode===6) generateFractions();
+ if(currentMode===7) generatePowers();
+ if(currentMode===8) generateExpressions();
+}
+
+function checkAnswer(){
+
+let ok =
+normalize(answer.value) === normalize(correctAnswer);
+
+if(currentMode===6){
+
+stats.fractions.total++;
+
+if(ok)
+stats.fractions.correct++;
+
+}
+
+if(currentMode===7){
+
+stats.powers.total++;
+
+if(ok)
+stats.powers.correct++;
+
+}
+
+if(currentMode===8){
+
+stats.expressions.total++;
+
+if(ok)
+stats.expressions.correct++;
+
+}
+
+if(ok){
+
+result.style.color="green";
+result.textContent="✓ Верно";
+
+}else{
+
+result.style.color="#8A282F";
+result.textContent=
+"✗ Правильный ответ: "
++ correctAnswer;
+
+}
+
+updateStats();
+
+// +++ блокируем кнопку после проверки
+var btn = document.querySelector('button[onclick="checkAnswer()"]');
+if(btn) btn.disabled = true;
+
+}
+
+function resetStats(){
+
+stats = {
+
+fractions:{total:0,correct:0},
+powers:{total:0,correct:0},
+expressions:{total:0,correct:0}
+
+};
+
+updateStats();
+
+}
+
+let sec=0;
+setInterval(()=>{
+ sec++;
+ timer.textContent=String(Math.floor(sec/60)).padStart(2,'0')+":"+String(sec%60).padStart(2,'0');
+},1000);
+
+// +++ Enter работает как «Проверить», но только пока кнопка активна
+document.getElementById('answer').addEventListener('keydown', function(e){
+  if (e.key === 'Enter'){
+    var btn = document.querySelector('button[onclick="checkAnswer()"]');
+    if (btn && !btn.disabled) checkAnswer();
+  }
+});
+
+setMode(6);
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>
