@@ -8,12 +8,9 @@
     '<div class="burger-overlay" id="burgerOverlay"></div>' +
     '<nav class="burger-panel" id="burgerPanel" aria-label="Навигация">' +
       '<div class="burger-header">' +
-        '<span>Меню</span>' +
+        '<a href="index.html" class="burger-home">Меню</a>' +
         '<button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>' +
       '</div>' +
-
-      // ===== НОВЫЙ ПУНКТ: Оглавление =====
-      '<a href="index.html" class="burger-home-link">🏠 Оглавление</a>' +
 
       '<div class="burger-group" data-group="math">' +
         '<div class="burger-group-title">Математика</div>' +
@@ -41,7 +38,7 @@
       '<div class="burger-group" data-group="geometry">' +
         '<div class="burger-group-title">Геометрия</div>' +
         '<div class="burger-group-list">' +
-          '<a href="sin-cos-tg.html">Синус косинус тангенс в прямоугольном треугольнике </a>' +
+          '<a href="sin-cos-tg.html">Синус косинус тангенс в прямоугольном треугольнике</a>' +
           '<a href="Vpisanny ugol.html">Вписанный угол</a>' +
           '<a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>' +
           '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
@@ -176,5 +173,3 @@
   })();
 
 })();
-
-
