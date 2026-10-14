@@ -12,6 +12,9 @@
         '<button class="burger-close" id="burgerClose" aria-label="Закрыть">&times;</button>' +
       '</div>' +
 
+      // ===== НОВЫЙ ПУНКТ: Оглавление =====
+      '<a href="index.html" class="burger-home-link">🏠 Оглавление</a>' +
+
       '<div class="burger-group" data-group="math">' +
         '<div class="burger-group-title">Математика</div>' +
         '<div class="burger-group-list">' +
@@ -42,6 +45,7 @@
           '<a href="Vpisanny ugol.html">Вписанный угол</a>' +
           '<a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>' +
           '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
+          '<a href="okruzhnost hordy.html">Окружность. Вписанный треугольник, хорды</a>' +
           '<a href="Teorema cosinusov.html">Теорема косинусов</a>' +
         '</div>' +
       '</div>' +
@@ -85,8 +89,6 @@
   });
 
   // ---------- Скрытие кнопки бургера ----------
-  // Появление: при возврате в самое начало страницы.
-  // Скрытие: мгновенно при скролле вниз или через 3 секунды бездействия.
   (function(){
     var hideTimer = null;
     var lastY = window.pageYOffset || document.documentElement.scrollTop;
@@ -130,8 +132,6 @@
   })();
 
   // ---------- Скрытие кнопки «назад» ----------
-  // Появление: у верхнего или нижнего края страницы.
-  // Скрытие: через 3 секунды. Уезжает вправо.
   (function(){
     var backBtn = document.querySelector('.back-btn');
     if (!backBtn) return;
@@ -176,3 +176,5 @@
   })();
 
 })();
+
+
