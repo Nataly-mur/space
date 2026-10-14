@@ -38,6 +38,7 @@
       '<div class="burger-group" data-group="geometry">' +
         '<div class="burger-group-title">Геометрия</div>' +
         '<div class="burger-group-list">' +
+          '<a href="sin-costg.html">Синус косинус тангенс в прямоугольном треугольнике </a>' +
           '<a href="Vpisanny ugol.html">Вписанный угол</a>' +
           '<a href="vpisannaya okr v treug.html">Вписанная окружность в треугольник</a>' +
           '<a href="Vpisanny 4h ugolnik.html">Вписанный четырёхугольник</a>' +
