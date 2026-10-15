@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Окружность: полный интерактив</title>
+<link rel="stylesheet" href="drawing/drawing-block.css">
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --ink:#1e2430; --muted:#6b7280;
+    --line:#e5e7eb;
+    --circ:#d32f2f;
+    --fig:#1565c0;
+    --fig-pen:#a1887f;
+    --chord:#7c3aed;
+    --chord-dark:#5b21b6;
+    --tang:#2e7d32;
+    --tang-pen:#1b5e20;
+    --rotation:#d32f2f;
+    --coincide:#d97706;
+    --green:#16a34a;
+    --green-dark:#15803d;
+    --red:#dc2626;
+    --red-dark:#b91c1c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--ink);padding:16px}
+  h1{font-size:20px;margin:0 0 12px;text-align:center}
+
+  .wrap{max-width:1100px;margin:0 auto;display:grid;
+        grid-template-columns:1fr 340px;gap:16px;
+        align-items:start}
+  .stage{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:6px;
+         overflow:hidden;width:100%}
+  #board{display:block;margin:0 auto;width:100%;height:auto;aspect-ratio:1/1}
+
+  .panel{background:var(--card);border:1px solid var(--line);
+         border-radius:12px;padding:14px}
+  .panel.rot-panel{margin-top:0}
+
+  .row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;
+            align-items:center}
+  .btn{padding:9px 14px;border:2px solid var(--line);background:#fff;
+       border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;
+       color:var(--ink);user-select:none}
+  .btn:hover{background:#f3f4f6}
+  .btn.active{background:var(--fig);color:#fff;border-color:var(--fig)}
+  .btn.reset{background:#fff;color:#8A282F;border-color:#f0c8c8}
+  .btn.reset:hover{background:#fef2f2}
+
+  .btn.sq{
+    min-width:44px;
+    padding:9px 0;
+    text-align:center;
+    font-size:20px;
+    font-weight:700;
+    line-height:1;
+  }
+  .btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn.green:hover{background:var(--green-dark)}
+  .btn.red{background:var(--red);color:#fff;border-color:var(--red)}
+  .btn.red:hover{background:var(--red-dark)}
+
+  .section-title{font-size:13px;color:var(--muted);text-transform:uppercase;
+                 letter-spacing:.5px;margin:14px 0 8px;font-weight:600;
+                 border-top:1px solid var(--line);padding-top:10px}
+  .section-title.first{border-top:none;padding-top:0;margin-top:0}
+
+  .pt-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .pt-row label{font-weight:700;font-size:15px;min-width:24px;
+                font-variant-numeric:tabular-nums}
+  .pt-row.dim label{color:var(--coincide)}
+  .pt-row .coincide{color:var(--ink);font-weight:700;font-size:15px;
+                    margin-left:-4px;margin-right:4px}
+
+  .pt-num{
+    flex:1 1 auto;min-width:60px;
+    padding:7px 10px;
+    background:#fff;border:2px solid var(--line);border-radius:8px;
+    font-size:15px;text-align:center;font-weight:700;
+    font-variant-numeric:tabular-nums;
+    cursor:pointer;user-select:none;
+    transition:background .1s;
+  }
+  .pt-num:active{background:#f0f4ff}
+
+  .pt-input{
+    display:none;
+    flex:1 1 auto;min-width:60px;
+    padding:7px 10px;
+    background:#fff;border:2px solid var(--fig);border-radius:8px;
+    font-size:15px;text-align:center;font-weight:700;
+    font-variant-numeric:tabular-nums;outline:none;
+    -webkit-appearance:none;
+  }
+  .pt-input.active{display:block}
+
+  .pt-row .unit{color:var(--muted);font-size:14px;margin-left:-4px}
+
+  .pt-row.chord .pt-num{border-color:var(--chord)}
+  .pt-row.chord .pt-input{border-color:var(--chord-dark)}
+  .pt-row.tang .pt-num{border-color:var(--tang)}
+  .pt-row.tang .pt-input{border-color:var(--tang-pen)}
+
+  .pt-slider-wrap{display:block;margin:4px 0 10px 32px;
+                  transition:opacity .2s}
+  .pt-slider{width:100%;accent-color:var(--fig);touch-action:none}
+  .pt-slider.chord{accent-color:var(--chord)}
+  .pt-slider.tang{accent-color:var(--tang)}
+  @media(max-width:900px){
+    .pt-slider-wrap{display:none}
+    .pt-slider-wrap.open{display:block}
+  }
+
+  .rot-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rot-line label{font-weight:700;font-size:15px;color:var(--rotation)}
+  .rot-line .num-inp{width:64px;padding:6px 8px;font-size:15px;text-align:center;
+    border:2px solid var(--rotation);border-radius:8px;
+    font-variant-numeric:tabular-nums;outline:none;
+    color:var(--rotation);font-weight:700;
+    -webkit-appearance:none}
+  .rot-line .unit{color:var(--rotation);font-size:14px}
+  .rot-quick{display:flex;gap:6px;margin-left:16px;flex-wrap:wrap}
+  .rot-quick .btn{padding:6px 10px;font-size:13px;color:var(--rotation);
+                  border-color:#f0c8c8}
+  .rot-quick .btn:hover{background:#fef2f2}
+  .rot-slider{width:100%;accent-color:var(--rotation);margin-top:6px}
+
+  .back-btn{position:fixed;bottom:15px;right:15px;width:44px;height:44px;
+    background:#0066cc;color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;font-size:20px;z-index:999;
+    transition: transform .3s ease, opacity .3s ease;}
+  .back-btn:hover{background:#0052a3}
+
+  @media(max-width:900px){
+    .wrap{display:flex;flex-direction:column;gap:12px;
+          align-items:stretch;width:100%}
+    .panel.top{order:1;width:100%}
+    .stage{order:2;width:100%}
+    .panel.rot-panel{order:3;width:100%}
+  }
+  @media(max-width:600px){
+    body{padding:10px}
+    h1{font-size:19px}
+    .panel{padding:14px}
+    .panel .section-title{font-size:13px}
+
+    .btn{font-size:15px;padding:11px 16px;border-radius:9px}
+    .row-btns{gap:8px}
+    .row-btns .btn{flex:1 1 auto;min-width:0;text-align:center}
+    .row-btns .btn.sq{flex:0 0 48px;min-width:48px;padding:11px 0}
+
+    #pointsList,#chordsList,#tangsList{
+      display:grid;grid-template-columns:1fr 1fr;
+      column-gap:10px;row-gap:6px}
+    .pt-cell{display:flex;flex-direction:column}
+
+    .pt-row{gap:6px;margin-bottom:0;font-size:15px}
+    .pt-row label{font-size:15px;min-width:22px}
+    .pt-num,.pt-input{
+      padding:8px 8px;
+      font-size:15px;
+      border-radius:8px;
+    }
+    .pt-row .unit{font-size:14px}
+    .pt-row .coincide{font-size:15px}
+
+    .rot-line{gap:10px;flex-wrap:wrap}
+    .rot-line label{font-size:16px;min-width:auto}
+    .rot-line .num-inp{width:78px;padding:9px 10px;font-size:16px}
+    .rot-line .unit{font-size:15px}
+    .rot-quick{margin-left:0;width:100%;justify-content:space-between;
+               gap:6px;margin-top:6px}
+    .rot-quick .btn{flex:1 1 0;padding:9px 6px;font-size:14px}
+
+    .pt-slider-wrap.open{margin:4px 0 0 0}
+  }
+</style>
+<link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<a href="index.html" class="back-btn">&#8592;</a>
+<h1>Окружность: полный интерактив</h1>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="board-wrap">
+<svg id="board" viewBox="0 0 600 600" aria-label="Окружность"></svg>
+    <canvas id="drawCanvas" width="1200" height="1200"></canvas>
+
+    <button class="draw-toggle" id="drawToggle" title="Режим рисования">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20 L4.5 16 L16.5 4 L20 7.5 L8 19.5 Z"/>
+        <path d="M14.5 6 L18 9.5"/>
+      </svg>
+    </button>
+
+    <div class="hotkeys-hint" id="hotkeysHint">
+      <b>P</b> перо · <b>E</b> ластик · <b>1–6</b> цвета · <b>[ / ]</b> размер ·
+      <b>L</b> прямая · <b>R</b> прямоугольник · <b>D</b> дуга · <b>C</b> окружность ·
+      <b>Shift</b>+перо — прямая · <b>Alt</b>+перо — временные ·
+      <b>Esc</b> — отменить фигуру · <b>Ctrl+Z</b> / <b>Ctrl+Shift+Z</b>
+    </div>
+    </div>
+  </div>
+
+  <div class="panel top">
+    <div class="row-btns">
+      <button class="btn" id="btnTriangle">Треугольник</button>
+      <button class="btn" id="btnAddPoint">Добавить точку</button>
+      <button class="btn" id="btnChords">Хорды</button>
+      <button class="btn sq green" id="btnChordPlus" style="display:none">+</button>
+      <button class="btn sq red" id="btnChordMinus" style="display:none">−</button>
+      <button class="btn" id="btnTangs">Касательные</button>
+      <button class="btn sq green" id="btnTangPlus" style="display:none">+</button>
+      <button class="btn sq red" id="btnTangMinus" style="display:none">−</button>
+      <button class="btn reset" id="btnReset">Сброс</button>
+    </div>
+
+    <div id="pointsSection" style="display:none">
+      <div class="section-title first">Точки</div>
+      <div id="pointsList"></div>
+    </div>
+
+    <div id="chordsSection" style="display:none">
+      <div class="section-title">Хорды</div>
+      <div id="chordsList"></div>
+    </div>
+
+    <div id="tangsSection" style="display:none">
+      <div class="section-title">Касательные</div>
+      <div id="tangsList"></div>
+    </div>
+  </div>
+
+  <div class="panel rot-panel">
+    <div class="section-title first">Вращение</div>
+    <div class="rot-line">
+      <label>Поворот</label>
+      <input type="number" class="num-inp" id="rotNum" value="0" min="0" max="359">
+      <span class="unit">°</span>
+      <div class="rot-quick">
+        <button class="btn" data-rot="0">0°</button>
+        <button class="btn" data-rot="90">90°</button>
+        <button class="btn" data-rot="180">180°</button>
+        <button class="btn" data-rot="270">270°</button>
+      </div>
+    </div>
+    <input type="range" class="rot-slider" id="rotSlider" min="0" max="359" value="0">
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var svg = document.getElementById('board');
+  var btnTriangle = document.getElementById('btnTriangle');
+  var btnAddPoint = document.getElementById('btnAddPoint');
+  var btnChords = document.getElementById('btnChords');
+  var btnChordPlus = document.getElementById('btnChordPlus');
+  var btnChordMinus = document.getElementById('btnChordMinus');
+  var btnTangs = document.getElementById('btnTangs');
+  var btnTangPlus = document.getElementById('btnTangPlus');
+  var btnTangMinus = document.getElementById('btnTangMinus');
+  var btnReset = document.getElementById('btnReset');
+  var pointsSection = document.getElementById('pointsSection');
+  var pointsList = document.getElementById('pointsList');
+  var chordsSection = document.getElementById('chordsSection');
+  var chordsList = document.getElementById('chordsList');
+  var tangsSection = document.getElementById('tangsSection');
+  var tangsList = document.getElementById('tangsList');
+  var rotNum = document.getElementById('rotNum');
+  var rotSlider = document.getElementById('rotSlider');
+
+  var W = 600, H = 600;
+  var CX = W/2, CY = H/2, R = 220;
+
+  var rotation = 0;
+  var points = [];
+  var chords = [];
+  var tangs = [];
+  var nextId = 1;
+  var hasTriangle = false;
+  var hasExtraPoint = false;
+
+  // Пул букв для пересечений: { key -> letter }, и обратно { letter -> key }
+  var intersectionLetters = {};    // key -> letter
+  var usedIntersectionLetters = {}; // letter -> true
+
+  // -------- буквы --------
+  function letterToCode(ch){ return ch.charCodeAt(0) - 64; }
+  function codeToLetter(code){ return String.fromCharCode(64 + code); }
+  function chordEndpoints(){
+    var arr = [];
+    for (var i = 0; i < chords.length; i++){
+      arr.push(findPoint(chords[i].aId));
+      arr.push(findPoint(chords[i].bId));
+    }
+    return arr.filter(Boolean);
+  }
+  function tangPoints(){
+    var arr = [];
+    for (var i = 0; i < tangs.length; i++) arr.push(findPoint(tangs[i].id));
+    return arr.filter(Boolean);
+  }
+  function maxLetterCode(){
+    var maxCode = 0;
+    var all = points.concat(chordEndpoints());
+    for (var i = 0; i < all.length; i++){
+      var c = letterToCode(all[i].letter);
+      if (c > maxCode) maxCode = c;
+    }
+    // учитываем занятые буквы пересечений
+    for (var key in usedIntersectionLetters){
+      if (usedIntersectionLetters[key]){
+        var c2 = letterToCode(key);
+        if (c2 > maxCode) maxCode = c2;
+      }
+    }
+    return maxCode;
+  }
+  function nextLetter(){ return codeToLetter(maxLetterCode() + 1); }
+  function findPoint(id){
+    for (var i = 0; i < points.length; i++) if (points[i].id === id) return points[i];
+    return null;
+  }
+
+  // -------- геометрия --------
+  function angleToXY(deg){
+    var rad = deg * Math.PI / 180;
+    return { x: CX + R*Math.cos(rad), y: CY - R*Math.sin(rad) };
+  }
+
+  // -------- создание/удаление --------
+  function makePoint(angle, source, role){
+    var p = { id: nextId++, letter: nextLetter(), angle: angle, source: source, role: role };
+    points.push(p);
+    return p;
+  }
+  function removePointsBySource(source){
+    points = points.filter(function(p){ return p.source !== source; });
+  }
+
+  // -------- хорды --------
+  function addChord(){
+    var idx = chords.length;
+    var p1, p2;
+    if (idx === 0){
+      p1 = makePoint(45, 'chord', 'chord-end');
+      p2 = makePoint(225, 'chord', 'chord-end');
+    } else {
+      p1 = makePoint(135, 'chord', 'chord-end');
+      p2 = makePoint(315, 'chord', 'chord-end');
+    }
+    chords.push({ aId: p1.id, bId: p2.id });
+  }
+  function removeLastChord(){
+    if (!chords.length) return;
+    var last = chords.pop();
+    points = points.filter(function(p){ return p.id !== last.aId && p.id !== last.bId; });
+  }
+  function removeAllChords(){ while (chords.length) removeLastChord(); }
+
+  // -------- касательные --------
+  function addTang(){
+    var idx = tangs.length;
+    var angle = idx === 0 ? 60 : 160;
+    var p = makePoint(angle, 'tang', 'tang-point');
+    tangs.push({ id: p.id });
+  }
+  function removeLastTang(){
+    if (!tangs.length) return;
+    var last = tangs.pop();
+    points = points.filter(function(p){ return p.id !== last.id; });
+  }
+  function removeAllTangs(){ while (tangs.length) removeLastTang(); }
+
+  // -------- рендер строки точки --------
+  function buildPointRow(p, kind){
+    var cell = document.createElement('div');
+    cell.className = 'pt-cell';
+
+    var row = document.createElement('div');
+    row.className = 'pt-row';
+    if (kind === 'chord') row.classList.add('chord');
+    if (kind === 'tang') row.classList.add('tang');
+    if (window.__coincidence && window.__coincidence[p.id]) row.classList.add('dim');
+
+    var label = document.createElement('label');
+    label.textContent = p.letter;
+    row.appendChild(label);
+
+    if (window.__coincidence && window.__coincidence[p.id]){
+      var co = document.createElement('span');
+      co.className = 'coincide';
+      co.textContent = '(' + window.__coincidence[p.id] + ')';
+      row.appendChild(co);
+    }
+
+    var disp = document.createElement('span');
+    disp.className = 'pt-num';
+    disp.textContent = Math.round(p.angle) + '°';
+    row.appendChild(disp);
+
+    var inp = document.createElement('input');
+    inp.type = 'number';
+    inp.className = 'pt-input';
+    inp.min = 0; inp.max = 359;
+    inp.value = Math.round(p.angle);
+    row.appendChild(inp);
+
+    var unit = document.createElement('span');
+    unit.className = 'unit';
+    unit.textContent = '°';
+    row.appendChild(unit);
+
+    cell.appendChild(row);
+
+    var sliderWrap = document.createElement('div');
+    sliderWrap.className = 'pt-slider-wrap';
+    var slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'pt-slider';
+    if (kind === 'chord') slider.classList.add('chord');
+    if (kind === 'tang') slider.classList.add('tang');
+    slider.min = 0; slider.max = 359;
+    slider.value = Math.round(p.angle);
+    sliderWrap.appendChild(slider);
+    cell.appendChild(sliderWrap);
+
+    function openSlider(){
+      sliderWrap.classList.add('open');
+      if (sliderWrap._timer) clearTimeout(sliderWrap._timer);
+      sliderWrap._timer = setTimeout(function(){
+        sliderWrap.classList.remove('open');
+      }, 3000);
+    }
+    function touchSlider(){
+      if (sliderWrap._timer) clearTimeout(sliderWrap._timer);
+      sliderWrap._timer = setTimeout(function(){
+        sliderWrap.classList.remove('open');
+      }, 3000);
+    }
+
+    var lastTap = 0, tapTimer = null;
+    disp.addEventListener('click', function(){
+      var now = Date.now();
+      if (now - lastTap < 300){
+        if (tapTimer){ clearTimeout(tapTimer); tapTimer = null; }
+        disp.style.display = 'none';
+        inp.classList.add('active');
+        inp.focus();
+        inp.select();
+      } else {
+        if (tapTimer) clearTimeout(tapTimer);
+        tapTimer = setTimeout(openSlider, 300);
+      }
+      lastTap = now;
+    });
+
+    inp.addEventListener('blur', function(){
+      inp.classList.remove('active');
+      disp.style.display = '';
+    });
+    inp.addEventListener('change', function(){
+      var v = parseInt(inp.value, 10);
+      if (isNaN(v)) v = 0;
+      v = ((v % 360) + 360) % 360;
+      inp.value = v;
+      disp.textContent = v + '°';
+      slider.value = v;
+      var t = findPoint(p.id);
+      if (t) t.angle = v;
+      draw(); renderAll();
+    });
+
+    slider.addEventListener('input', function(){
+      var v = parseInt(slider.value, 10);
+      disp.textContent = v + '°';
+      inp.value = v;
+      var t = findPoint(p.id);
+      if (t) t.angle = v;
+      draw(); touchSlider();
+    });
+    slider.addEventListener('touchstart', touchSlider, {passive:true});
+    slider.addEventListener('touchmove', touchSlider, {passive:true});
+    slider.addEventListener('touchend', touchSlider, {passive:true});
+
+    return cell;
+  }
+
+  function computeCoincidence(allPoints){
+    var visibleAngles = allPoints.map(function(p){
+      return ((p.angle + rotation) % 360 + 360) % 360;
+    });
+    var coincidence = {};
+    for (var i = 0; i < allPoints.length; i++){
+      for (var j = 0; j < i; j++){
+        var d = Math.abs(visibleAngles[i] - visibleAngles[j]);
+        d = Math.min(d, 360 - d);
+        if (d < 0.5){
+          coincidence[allPoints[i].id] = allPoints[j].letter;
+          break;
+        }
+      }
+    }
+    return coincidence;
+  }
+
+  function renderAll(){
+    pointsList.innerHTML = '';
+    chordsList.innerHTML = '';
+    tangsList.innerHTML = '';
+
+    var figPoints = points.filter(function(p){ return p.source === 'triangle' || p.source === 'extra'; });
+    var chordPts = chordEndpoints();
+    var tangPts = tangPoints();
+
+    var all = figPoints.concat(chordPts).concat(tangPts);
+    window.__coincidence = computeCoincidence(all);
+
+    if (figPoints.length){
+      pointsSection.style.display = '';
+      figPoints.forEach(function(p){ pointsList.appendChild(buildPointRow(p, 'fig')); });
+    } else pointsSection.style.display = 'none';
+
+    if (chordPts.length){
+      chordsSection.style.display = '';
+      chordPts.forEach(function(p){ chordsList.appendChild(buildPointRow(p, 'chord')); });
+    } else chordsSection.style.display = 'none';
+
+    if (tangPts.length){
+      tangsSection.style.display = '';
+      tangPts.forEach(function(p){ tangsList.appendChild(buildPointRow(p, 'tang')); });
+    } else tangsSection.style.display = 'none';
+  }
+
+  // -------- отрисовка --------
+  function el(name, attrs){
+    var n = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clearSvg(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  // Точка пересечения двух прямых, заданных точкой и направлением.
+  function intersectLines(P1, d1, P2, d2){
+    var denom = d1.x * d2.y - d1.y * d2.x;
+    if (Math.abs(denom) < 1e-9) return null;
+    var ex = P2.x - P1.x, ey = P2.y - P1.y;
+    var t = (ex * d2.y - ey * d2.x) / denom;
+    return { x: P1.x + t * d1.x, y: P1.y + t * d1.y };
+  }
+
+  // Отрезок: A→B. Параметры: 0..1 внутри, вне — вне отрезка.
+  function pointOnSegment(P, A, B){
+    var dx = B.x - A.x, dy = B.y - A.y;
+    var len2 = dx*dx + dy*dy;
+    if (len2 < 1e-9) return false;
+    var t = ((P.x - A.x)*dx + (P.y - A.y)*dy) / len2;
+    if (t < -0.001 || t > 1.001) return false;
+    var px = A.x + t*dx, py = A.y + t*dy;
+    var d2 = (P.x-px)*(P.x-px) + (P.y-py)*(P.y-py);
+    return d2 < 4;   // в пределах 2 пикселей — считаем на отрезке
+  }
+
+  // Формируем список «линий» с идентификаторами.
+  // Каждая линия: { key, kind, p1, p2, infinite }
+  function buildLines(){
+    var lines = [];
+
+    // стороны фигуры
+    var triPoints = points.filter(function(p){ return p.role === 'triangle-vertex'; })
+                          .sort(function(a,b){ return a.id - b.id; });
+    var quadPoint = points.filter(function(p){ return p.role === 'quad-vertex'; })[0];
+    var figPts = [];
+    if (triPoints.length === 3 && quadPoint){
+      figPts = triPoints.concat([quadPoint]);
+    } else if (triPoints.length === 3){
+      figPts = triPoints;
+    }
+    if (figPts.length >= 3){
+      for (var i = 0; i < figPts.length; i++){
+        var p1 = figPts[i];
+        var p2 = figPts[(i+1) % figPts.length];
+        lines.push({
+          key: 'side-' + p1.id + '-' + p2.id,
+          kind: 'side',
+          p1: p1, p2: p2,
+          infinite: false
+        });
+      }
+    }
+
+    // хорды
+    for (var c = 0; c < chords.length; c++){
+      var pa = findPoint(chords[c].aId);
+      var pb = findPoint(chords[c].bId);
+      if (!pa || !pb) continue;
+      lines.push({
+        key: 'chord-' + c,
+        kind: 'chord',
+        p1: pa, p2: pb,
+        infinite: false
+      });
+    }
+
+    // касательные — бесконечные прямые
+    for (var t = 0; t < tangs.length; t++){
+      var pt = findPoint(tangs[t].id);
+      if (!pt) continue;
+      lines.push({
+        key: 'tang-' + t,
+        kind: 'tang',
+        p1: pt, p2: null,     // для касательной вторая точка не нужна
+        infinite: true
+      });
+    }
+
+    return lines;
+  }
+
+  // Пиксели линии: p1px, p2px. Для касательной: p1px — точка касания, направление — касательная.
+  function lineToPixels(line){
+    if (line.kind === 'tang'){
+      var v = angleToXY(line.p1.angle + rotation);
+      var dx = v.x - CX, dy = v.y - CY;
+      var len = Math.sqrt(dx*dx + dy*dy) || 1;
+      var ux = dx/len, uy = dy/len;
+      // направление касательной — перпендикуляр к радиусу
+      return { A: v, dir: { x: -uy, y: ux } };
+    } else {
+      var A = angleToXY(line.p1.angle + rotation);
+      var B = angleToXY(line.p2.angle + rotation);
+      return { A: A, B: B };
+    }
+  }
+
+  // Все найденные точки пересечений: массив {key, x, y}
+  function computeIntersections(){
+    var lines = buildLines();
+    var results = [];
+
+    for (var i = 0; i < lines.length; i++){
+      for (var j = i+1; j < lines.length; j++){
+        var L1 = lines[i], L2 = lines[j];
+        var P1 = lineToPixels(L1);
+        var P2 = lineToPixels(L2);
+        var point = null;
+        var d1, d2;
+
+        if (L1.kind === 'tang' && L2.kind === 'tang'){
+          // P — пересечение двух касательных, считаем отдельно
+          continue;
+        }
+        if (L1.kind === 'tang'){
+          d1 = P1.dir;
+          if (L2.kind === 'tang'){ continue; }
+          d2 = { x: P2.B.x - P2.A.x, y: P2.B.y - P2.A.y };
+          point = intersectLines(P1.A, d1, P2.A, d2);
+          if (point && !pointOnSegment(point, P2.A, P2.B)) point = null;
+        } else if (L2.kind === 'tang'){
+          d1 = { x: P1.B.x - P1.A.x, y: P1.B.y - P1.A.y };
+          d2 = P2.dir;
+          point = intersectLines(P1.A, d1, P2.A, d2);
+          if (point && !pointOnSegment(point, P1.A, P1.B)) point = null;
+        } else {
+          d1 = { x: P1.B.x - P1.A.x, y: P1.B.y - P1.A.y };
+          d2 = { x: P2.B.x - P2.A.x, y: P2.B.y - P2.A.y };
+          point = intersectLines(P1.A, d1, P2.A, d2);
+          if (point){
+            if (!pointOnSegment(point, P1.A, P1.B)) point = null;
+            if (point && !pointOnSegment(point, P2.A, P2.B)) point = null;
+          }
+        }
+
+        if (!point) continue;
+
+        // исключаем пересечения, совпадающие с вершинами/концами (1px)
+        var tooClose = false;
+        for (var k = 0; k < points.length; k++){
+          var v = angleToXY(points[k].angle + rotation);
+          if (Math.hypot(v.x - point.x, v.y - point.y) < 3) { tooClose = true; break; }
+        }
+        if (tooClose) continue;
+
+        results.push({
+          key: L1.key + 'x' + L2.key,
+          x: point.x,
+          y: point.y
+        });
+      }
+    }
+    return results;
+  }
+
+  // выдать букву для пересечения с данным ключом (если ещё нет)
+  function letterForIntersection(key){
+    if (!intersectionLetters[key]){
+      var letter = codeToLetter(maxLetterCode() + 1);
+      intersectionLetters[key] = letter;
+      usedIntersectionLetters[letter] = true;
+    }
+    return intersectionLetters[key];
+  }
+
+  function draw(){
+    clearSvg();
+
+    svg.appendChild(el('rect', {x:0, y:0, width:W, height:H, fill:'#fafafa', rx:8}));
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:R,
+      fill:'none', stroke:'var(--circ)', 'stroke-width':2.5}));
+
+    var triPoints = points.filter(function(p){ return p.role === 'triangle-vertex'; })
+                          .sort(function(a,b){ return a.id - b.id; });
+    var quadPoint = points.filter(function(p){ return p.role === 'quad-vertex'; })[0];
+
+    // пунктиры к O от вершин треугольника
+    if (triPoints.length === 3 && !quadPoint){
+      triPoints.forEach(function(p){
+        var v = angleToXY(p.angle + rotation);
+        svg.appendChild(el('line', {x1:CX, y1:CY, x2:v.x, y2:v.y,
+          stroke:'var(--fig-pen)', 'stroke-width':1.5, 'stroke-dasharray':'4 4'}));
+      });
+    }
+
+    // пунктиры к O от концов хорд
+    chordEndpoints().forEach(function(p){
+      var v = angleToXY(p.angle + rotation);
+      svg.appendChild(el('line', {x1:CX, y1:CY, x2:v.x, y2:v.y,
+        stroke:'var(--fig-pen)', 'stroke-width':1.5, 'stroke-dasharray':'4 4'}));
+    });
+
+    // пунктиры к O от точек касания — тёмно-зелёные
+    tangPoints().forEach(function(p){
+      var v = angleToXY(p.angle + rotation);
+      svg.appendChild(el('line', {x1:CX, y1:CY, x2:v.x, y2:v.y,
+        stroke:'var(--tang-pen)', 'stroke-width':1, 'stroke-dasharray':'3 3'}));
+    });
+
+    // фигура
+    if (triPoints.length === 3 && quadPoint){
+      var quad = triPoints.concat([quadPoint]);
+      for (var i = 0; i < quad.length; i++){
+        var p1 = quad[i], p2 = quad[(i+1) % quad.length];
+        var a1 = angleToXY(p1.angle + rotation);
+        var a2 = angleToXY(p2.angle + rotation);
+        svg.appendChild(el('line', {x1:a1.x, y1:a1.y, x2:a2.x, y2:a2.y,
+          stroke:'var(--fig)', 'stroke-width':3, 'stroke-linecap':'round'}));
+      }
+    } else if (triPoints.length === 3){
+      for (var i = 0; i < 3; i++){
+        var p1 = triPoints[i], p2 = triPoints[(i+1) % 3];
+        var a1 = angleToXY(p1.angle + rotation);
+        var a2 = angleToXY(p2.angle + rotation);
+        svg.appendChild(el('line', {x1:a1.x, y1:a1.y, x2:a2.x, y2:a2.y,
+          stroke:'var(--fig)', 'stroke-width':3, 'stroke-linecap':'round'}));
+      }
+    }
+
+    // хорды
+    for (var c = 0; c < chords.length; c++){
+      var pa = findPoint(chords[c].aId);
+      var pb = findPoint(chords[c].bId);
+      if (!pa || !pb) continue;
+      var va = angleToXY(pa.angle + rotation);
+      var vb = angleToXY(pb.angle + rotation);
+      svg.appendChild(el('line', {x1:va.x, y1:va.y, x2:vb.x, y2:vb.y,
+        stroke:'var(--chord)', 'stroke-width':3, 'stroke-linecap':'round'}));
+    }
+
+    // касательные + значки прямого угла
+    var tangLines = [];
+    var tangPts = tangPoints();
+    tangPts.forEach(function(p){
+      var v = angleToXY(p.angle + rotation);
+      var dx = v.x - CX, dy = v.y - CY;
+      var len = Math.sqrt(dx*dx + dy*dy) || 1;
+      var ux = -dx/len, uy = -dy/len;   // ← теперь направлен ВНУТРЬ (к O)
+      var tx = -uy, ty = ux;             // касательное направление (пересчитано от нового ux/uy)
+      var big = 2000;
+      svg.appendChild(el('line', {
+        x1: v.x - tx*big, y1: v.y - ty*big,
+        x2: v.x + tx*big, y2: v.y + ty*big,
+        stroke:'var(--tang)', 'stroke-width':3, 'stroke-linecap':'round'
+      }));
+      // значок прямого угла — ВНУТРИ окружности
+      var size = 12;
+      var a = { x:v.x + ux*size, y:v.y + uy*size };
+      var b = { x:v.x + (ux+tx)*size, y:v.y + (uy+ty)*size };
+      var c = { x:v.x + tx*size, y:v.y + ty*size };
+      svg.appendChild(el('path', {
+        d: 'M ' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) +
+           ' L ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1) +
+           ' L ' + c.x.toFixed(1) + ' ' + c.y.toFixed(1),
+        fill:'none', stroke:'var(--tang-pen)', 'stroke-width':1.5
+      }));
+      tangLines.push({ x:v.x, y:v.y, dx:tx, dy:ty });
+    });
+
+    // точка P — пересечение двух касательных
+    if (tangLines.length === 2){
+      var L1 = tangLines[0], L2 = tangLines[1];
+      var P = intersectLines({x:L1.x, y:L1.y}, {x:L1.dx, y:L1.dy},
+                             {x:L2.x, y:L2.y}, {x:L2.dx, y:L2.dy});
+      if (P && P.x > -50 && P.x < W + 50 && P.y > -50 && P.y < H + 50){
+        svg.appendChild(el('circle', {cx:P.x, cy:P.y, r:5, fill:'var(--tang-pen)'}));
+        svg.appendChild(el('text', {x:P.x+8, y:P.y+5,
+          'font-size':16, 'font-weight':700, fill:'var(--tang-pen)'})).textContent = 'P';
+      }
+    }
+
+    // центр O
+    svg.appendChild(el('circle', {cx:CX, cy:CY, r:4, fill:'var(--ink)'}));
+    svg.appendChild(el('text', {x:CX+8, y:CY+5, 'font-size':15,
+      'font-weight':700, fill:'var(--ink)'})).textContent = 'O';
+
+    // точки фигуры, хорд, касаний
+    var allPts = points.slice();
+    var visibleAngles = allPts.map(function(p){
+      return ((p.angle + rotation) % 360 + 360) % 360;
+    });
+    var hideName = {}, isCoincideLater = {};
+    for (var i = 0; i < allPts.length; i++){
+      for (var j = 0; j < i; j++){
+        var d = Math.abs(visibleAngles[i] - visibleAngles[j]);
+        d = Math.min(d, 360 - d);
+        if (d < 0.5){
+          hideName[allPts[i].id] = true;
+          isCoincideLater[allPts[i].id] = true;
+          break;
+        }
+      }
+    }
+
+    allPts.forEach(function(p){
+      var v = angleToXY(p.angle + rotation);
+      var color = isCoincideLater[p.id] ? 'var(--coincide)' : 'var(--ink)';
+      svg.appendChild(el('circle', {cx:v.x, cy:v.y, r:6, fill:color}));
+      if (!hideName[p.id]){
+        var dx = v.x - CX, dy = v.y - CY;
+        var len = Math.sqrt(dx*dx + dy*dy) || 1;
+        var lx = v.x + (dx/len)*20;
+        var ly = v.y + (dy/len)*20 + 5;
+        svg.appendChild(el('text', {x:lx, y:ly,
+          'text-anchor':'middle', 'font-size':16,
+          'font-weight':700, fill:color})).textContent = p.letter;
+      }
+    });
+
+        // пересечения
+    var inter = computeIntersections();
+
+    // освобождаем буквы тех пересечений, которых больше нет
+    var activeKeys = {};
+    inter.forEach(function(pt){ activeKeys[pt.key] = true; });
+    for (var key in intersectionLetters){
+      if (!activeKeys[key]){
+        var letter = intersectionLetters[key];
+        delete intersectionLetters[key];
+        if (usedIntersectionLetters[letter]){
+          delete usedIntersectionLetters[letter];
+        }
+      }
+    }
+
+    inter.forEach(function(pt){
+      // проверка попадания в поле
+      if (pt.x < 0 || pt.x > W || pt.y < 0 || pt.y > H) return;
+      var letter = letterForIntersection(pt.key);
+      
+
+      // проверка наложения на другие точки
+      var hidden = false;
+      var conflictLetter = null;
+      for (var k = 0; k < allPts.length; k++){
+        var v = angleToXY(allPts[k].angle + rotation);
+        if (Math.hypot(v.x - pt.x, v.y - pt.y) < 5){
+          hidden = true;
+          conflictLetter = allPts[k].letter;
+          break;
+        }
+      }
+
+      svg.appendChild(el('circle', {cx:pt.x, cy:pt.y, r:5, fill:'var(--ink)'}));
+      if (!hidden){
+        svg.appendChild(el('text', {x:pt.x+8, y:pt.y+5,
+          'font-size':15, 'font-weight':700, fill:'var(--ink)'})).textContent = letter;
+      }
+    });
+  }
+
+  // -------- кнопки --------
+  btnTriangle.addEventListener('click', function(){
+    if (hasTriangle){
+      removePointsBySource('triangle');
+      hasTriangle = false;
+      btnTriangle.classList.remove('active');
+    } else {
+      makePoint(210, 'triangle', 'triangle-vertex');
+      makePoint(90,  'triangle', 'triangle-vertex');
+      makePoint(330, 'triangle', 'triangle-vertex');
+      hasTriangle = true;
+      btnTriangle.classList.add('active');
+    }
+    updateAddBtnState();
+    renderAll();
+    draw();
+  });
+
+  btnAddPoint.addEventListener('click', function(){
+    if (!hasTriangle && !hasExtraPoint){
+      makePoint(270, 'extra', 'standalone');
+      hasExtraPoint = true;
+      btnAddPoint.classList.add('active');
+    } else if (hasTriangle && !hasExtraPoint){
+      makePoint(270, 'extra', 'quad-vertex');
+      hasExtraPoint = true;
+      btnAddPoint.classList.add('active');
+    } else {
+      removePointsBySource('extra');
+      hasExtraPoint = false;
+      btnAddPoint.classList.remove('active');
+    }
+    updateAddBtnState();
+    renderAll();
+    draw();
+  });
+
+  function updateAddBtnState(){
+    if (hasTriangle || hasExtraPoint) btnAddPoint.classList.add('active');
+    else btnAddPoint.classList.remove('active');
+  }
+
+  btnChords.addEventListener('click', function(){
+    if (chords.length){
+      removeAllChords();
+      btnChords.classList.remove('active');
+      btnChordPlus.style.display = 'none';
+      btnChordMinus.style.display = 'none';
+    } else {
+      addChord();
+      btnChords.classList.add('active');
+      btnChordPlus.style.display = '';
+      btnChordMinus.style.display = 'none';
+    }
+    renderAll(); draw();
+  });
+  btnChordPlus.addEventListener('click', function(){
+    if (chords.length === 1){
+      addChord();
+      btnChordPlus.style.display = 'none';
+      btnChordMinus.style.display = '';
+      renderAll(); draw();
+    }
+  });
+  btnChordMinus.addEventListener('click', function(){
+    if (chords.length === 2){
+      removeLastChord();
+      btnChordMinus.style.display = 'none';
+      btnChordPlus.style.display = '';
+      renderAll(); draw();
+    }
+  });
+
+  btnTangs.addEventListener('click', function(){
+    if (tangs.length){
+      removeAllTangs();
+      btnTangs.classList.remove('active');
+      btnTangPlus.style.display = 'none';
+      btnTangMinus.style.display = 'none';
+    } else {
+      addTang();
+      btnTangs.classList.add('active');
+      btnTangPlus.style.display = '';
+      btnTangMinus.style.display = 'none';
+    }
+    renderAll(); draw();
+  });
+  btnTangPlus.addEventListener('click', function(){
+    if (tangs.length === 1){
+      addTang();
+      btnTangPlus.style.display = 'none';
+      btnTangMinus.style.display = '';
+      renderAll(); draw();
+    }
+  });
+  btnTangMinus.addEventListener('click', function(){
+    if (tangs.length === 2){
+      removeLastTang();
+      btnTangMinus.style.display = 'none';
+      btnTangPlus.style.display = '';
+      renderAll(); draw();
+    }
+  });
+
+  btnReset.addEventListener('click', function(){
+    points = []; chords = []; tangs = [];
+    intersectionLetters = {};
+    usedIntersectionLetters = {};
+    hasTriangle = false; hasExtraPoint = false; rotation = 0;
+    btnTriangle.classList.remove('active');
+    btnAddPoint.classList.remove('active');
+    btnChords.classList.remove('active');
+    btnTangs.classList.remove('active');
+    btnChordPlus.style.display = 'none';
+    btnChordMinus.style.display = 'none';
+    btnTangPlus.style.display = 'none';
+    btnTangMinus.style.display = 'none';
+    rotNum.value = 0; rotSlider.value = 0;
+    renderAll(); draw();
+  });
+
+  // -------- вращение --------
+  function applyRotation(v){
+    v = ((v % 360) + 360) % 360;
+    rotation = v;
+    rotNum.value = v;
+    rotSlider.value = v;
+    draw();
+    renderAll();
+  }
+  rotNum.addEventListener('change', function(){
+    var v = parseInt(rotNum.value, 10);
+    if (isNaN(v)) v = 0;
+    applyRotation(v);
+  });
+  rotSlider.addEventListener('input', function(){
+    applyRotation(parseInt(rotSlider.value, 10) || 0);
+  });
+  document.querySelectorAll('.rot-quick .btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var v = parseInt(b.getAttribute('data-rot'), 10);
+      applyRotation(v);
+    });
+  });
+
+  draw();
+  renderAll();
+})();
+</script>
+<script src="menu.js"></script>
+
+<div class="draw-toolbar" id="toolbar" title="Перетащите за любое место. Двойной клик — сброс.">
+  <button class="tool-btn" id="colorBtn" title="Цвет (1–6)">
+    <span class="color-circle" id="colorCircle" style="background:#d32f2f"></span>
+  </button>
+  <button class="tool-btn size-btn" id="sizeBtn" title="Размер ( [ / ] )">
+    <span class="size-icon">✒</span>
+    <span class="size-num" id="sizeBtnLabel">4</span>
+  </button>
+  <button class="tool-btn" id="eraserBtn" title="Ластик (E)">🧽</button>
+  <button class="tool-btn" id="shapesBtn" title="Фигуры (L / R / D / C)">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+      <rect x="3" y="13" width="8" height="8"/>
+      <circle cx="17" cy="17" r="4"/>
+      <path d="M3 10 L10 3 L17 10 Z"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="undoBtn" title="Отменить (Ctrl+Z)">↶</button>
+  <button class="tool-btn" id="redoBtn" title="Повторить (Ctrl+Shift+Z)">↷</button>
+
+  <div class="dropdown color-dropdown" id="colorDropdown">
+    <button class="color-swatch" data-color="#000000" style="background:#000000" title="Чёрный (1)"></button>
+    <button class="color-swatch" data-color="#1565c0" style="background:#1565c0" title="Синий (2)"></button>
+    <button class="color-swatch" data-color="#2e7d32" style="background:#2e7d32" title="Зелёный (3)"></button>
+    <button class="color-swatch" data-color="#fbc02d" style="background:#fbc02d" title="Жёлтый (4)"></button>
+    <button class="color-swatch" data-color="#d32f2f" style="background:#d32f2f" title="Красный (5)"></button>
+    <button class="color-swatch" data-color="#757575" style="background:#757575" title="Серый (6)"></button>
+  </div>
+
+  <div class="dropdown size-dropdown" id="sizeDropdown">
+    <div class="row"><span class="row-label">✒ Перо:</span><input type="range" id="sizeRange" min="1" max="30" step="1" value="4"><span class="size-num-val" id="sizeLabel">4</span></div>
+    <div class="row"><span class="row-label">🧽 Ластик:</span><input type="range" id="eraserRange" min="4" max="120" step="1" value="8"><span class="size-num-val" id="eraserLabel">8</span></div>
+  </div>
+
+  <div class="dropdown shapes-dropdown" id="shapesDropdown">
+    <button class="shape-btn" data-shape="line" title="Прямая (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/></svg><span class="hotkey">L</span></button>
+    <button class="shape-btn" data-shape="rect" title="Прямоугольник (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12"/></svg><span class="hotkey">R</span></button>
+    <button class="shape-btn" data-shape="arc" title="Дуга (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 19 Q12 3 21 19"/></svg><span class="hotkey">D</span></button>
+    <button class="shape-btn" data-shape="circle" title="Окружность (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg><span class="hotkey">C</span></button>
+  </div>
+</div>
+<script src="drawing/drawing-block.js"></script>
+</body>
+</html>
